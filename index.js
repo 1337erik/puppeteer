@@ -24,11 +24,17 @@ const optionsLonger = {
     integer: true,
 };
 
+// -- Variables for Settings --------------------------------------------
+
 // const dir = 'asc';
 const dir = 'desc';
 
-const agent = process.env.OND_AGENT;
-// const agent = process.env.MLI_AGENT;
+// const agent = process.env.OND_AGENT;
+const agent = process.env.MLI_AGENT;
+
+const starting_page = 58;
+
+// ----------------------------------------------------------------------
 
 const delay = () => new Promise((resolve) => setTimeout(resolve, rn(options)));
 
@@ -59,7 +65,7 @@ const setMli = async ( page ) => {
 
     await page.waitForTimeout( 100 );
     await selectAgency( page );
-    // await selectArchived( page );
+    await selectAgency( page );
 }
 
 const setOndeck = async ( page ) => {
@@ -120,8 +126,8 @@ const sherpaRefresh = async () => {
 
     // -- Part 1, setup for either ondeck or mli --------------------------------------------------
 
-    // await setMli( page );
-    await setOndeck( page );
+    await setMli( page );
+    // await setOndeck( page );
 
     await delay();
     await delay();
@@ -132,7 +138,6 @@ const sherpaRefresh = async () => {
     // Wait for the table to be present on the page
     await page.waitForSelector( 'table' );
 
-    const starting_page = 1;
     let current_page = 1;
     let current_link = 0;
 
