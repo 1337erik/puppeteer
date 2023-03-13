@@ -1,90 +1,66 @@
-const puppeteer = require('puppeteer-extra')
+const puppeteer = require( 'puppeteer-extra' );
 
-const chromePaths = require('chrome-paths');
-const {executablePath} = require( 'puppeteer' );
+const chromePaths = require( 'chrome-paths' );
+// const {executablePath} = require( 'puppeteer' );
  
 // https://stackoverflow.com/questions/55678095/bypassing-captchas-with-headless-chrome-using-puppeteer
-const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-puppeteer.use(StealthPlugin())
+const StealthPlugin = require( 'puppeteer-extra-plugin-stealth' );
+puppeteer.use( StealthPlugin() );
 
 // https://github.com/intoli/user-agents
-var userAgent = require('user-agents');
+// var userAgent = require('user-agents'); // NOT USED
 
-var rn = require('random-number');
-require('dotenv').config();
-
-const options = {
-    min: 1000,
-    max: 2000,
-    integer: true,
-};
-const optionsLonger = {
-    min: 10000,
-    max: 13000,
-    integer: true,
-};
-
-// -- Variables for Settings --------------------------------------------
-
-// const dir = 'asc';
-const dir = 'desc';
-
-// const agent = process.env.OND_AGENT;
-const agent = process.env.MLI_AGENT;
-
-const starting_page = 58;
+var rn = require( 'random-number' );
+require( 'dotenv' ).config();
 
 // ----------------------------------------------------------------------
 
-const delay = () => new Promise((resolve) => setTimeout(resolve, rn(options)));
-
-const longDelay = () =>
-    new Promise((resolve) => setTimeout(resolve, rn(optionsLonger)));
 
 const login = async ( page ) => {
 
-    await page.goto('https://www.healthsherpa.com/sessions/new');
+    await page.goto( 'https://www.healthsherpa.com/sessions/new' );
 
-    await page.waitForSelector('#username_or_email');
-    await page.type('#username_or_email', process.env.USERNAME);
+    await page.waitForSelector( '#username_or_email' );
+    await page.type( '#username_or_email', process.env.USERNAME );
 
-    await page.waitForSelector('#password');
-    await page.type('#password', process.env.PASSWORD);
+    await page.waitForSelector( '#password' );
+    await page.type( '#password', process.env.PASSWORD );
 
-    await page.waitForSelector('#login-submit-button');
-    await page.click('#login-submit-button');
+    await page.waitForSelector( '#login-submit-button' );
+    await page.click( '#login-submit-button' );
 }
 
-const setMli = async ( page ) => {
+const setAgency = async ( page, dir ) => {
 
-    const mli_url = `https://www.healthsherpa.com/agents/jonathan-brumer-glfz4w/clients?_agent_id=jonathan-brumer-glfz4w&ffm_applications[search]=true&term=&agent_id=jonathan-brumer-glfz4w&page=1&per_page=10&exchange=onEx&include_shared_applications=true&include_all_applications=true&${dir}[]=ffm_effective_date`;
-    await page.goto( mli_url );
+    const agency_url = process.env.WEBSITE_URL + `&page=1&per_page=10&exchange=onEx&include_shared_applications=true&include_all_applications=true&${dir}[]=ffm_effective_date`;
+    await page.goto( agency_url );
 
-    await page.waitForTimeout( 100 );
-    await selectArchived( page );
-
-    await page.waitForTimeout( 100 );
-    await selectAgency( page );
-    await selectAgency( page );
+    return process.env.AGENT_NAME;
 }
 
-const setOndeck = async ( page ) => {
+const findFfmError = async ( puppet_object ) => {
 
-    const ondeck_url = `https://www.healthsherpa.com/agents/anthony-angulo-6pi14g/clients?_agent_id=anthony-angulo-6pi14g&ffm_applications[search]=true&term=&agent_id=anthony-angulo-6pi14g&page=1&per_page=10&exchange=onEx&include_shared_applications=true&include_all_applications=true&${dir}[]=ffm_effective_date`;
-    await page.goto( ondeck_url );
+    try {
 
-    await delay();
-    await selectShared( page );
-    await selectArchived( page );
-    await selectShared( page );
+        await puppet_object.waitForSelector( '.fade.modal-backdrop', { timeout: 3000 } );
+
+        console.log( 'FFM Renew Alert Detected..' );
+
+        const closeButton = await puppet_object.$x( "//div[@style='position: absolute; top: 0px; right: 0px;']//button[contains(@aria-label,'Close') and text()-'X']" );
+        await closeButton[ 0 ].click();
+
+    } catch( e ) {
+
+        // fail silently..
+    }
 }
 
 const sherpaRefresh = async () => {
 
     const browser = await puppeteer.launch({
         headless: false,
-        // executablePath: chromePaths.chrome,
-        executablePath: executablePath(),
+        executablePath: chromePaths.chrome,
+        // executablePath: executablePath(),
         defaultViewport: false
     });
     const page = await browser.newPage();
@@ -103,6 +79,8 @@ const sherpaRefresh = async () => {
         'accept-language': 'en-US,en;q=0.9,en;q=0.8'
     }); 
 
+    // -- Only load text to make this go faster --------
+
     await page.setRequestInterception( true );
     page.on( 'request', async ( request ) => {
 
@@ -116,21 +94,24 @@ const sherpaRefresh = async () => {
         }
     });
 
-    // --------------------------------------------------
-
-    // await page.waitForTimeout(5000);
+    // -- Login -------------------------------------------------------------
 
     await login( page );
 
-    await delay();
+    await page.waitForTimeout( 3000 );
+
+    await findFfmError( page ); // optionally close the "integrate your ffm" modal
+
+    // -- Variables for Settings --------------------------------------------
+
+    // const dir = 'asc';
+    const dir = 'desc';
+
+    const starting_page = 1;
 
     // -- Part 1, setup for either ondeck or mli --------------------------------------------------
 
-    await setMli( page );
-    // await setOndeck( page );
-
-    await delay();
-    await delay();
+    const agent = await setAgency( page, dir );
 
     // --------------------------------------------------------------------------------------------
     // -- Part 2, select each link ----------------------------------------------------------------
@@ -143,7 +124,7 @@ const sherpaRefresh = async () => {
 
     while( true ){
 
-        await delay();
+        await page.waitForTimeout( 2000 );
 
         if( current_page >= starting_page ){
 
@@ -165,6 +146,8 @@ const sherpaRefresh = async () => {
 
                 console.log( '------------------------------' );
                 console.log( `Processing Link #${current_link}: ${linkHref}..` );
+
+                await findFfmError( newTab ); // optionally close the "integrate your ffm" modal
 
                 let passed_exception = false;
 
@@ -200,9 +183,7 @@ const sherpaRefresh = async () => {
 
                         console.log( 'Optional EDE Sync Enable Detected..' );
 
-                        await delay();
-                        await delay();
-                        await delay();
+                        await page.waitForTimeout( 6000 );
 
                     } catch ( e ){
 
@@ -235,7 +216,7 @@ const sherpaRefresh = async () => {
                     } catch( e ){
 
                         console.log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
-                        await newTab.close();
+                        // await newTab.close();
                     }
 
                     console.log( '------------------------------' );
@@ -280,6 +261,8 @@ const sherpaRefresh = async () => {
     };
 };
 
+
+// -- Unused snippets for selecting filters --------------------------------------------------
 
 const selectArchived = async ( page ) => {
 
