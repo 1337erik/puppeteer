@@ -21,7 +21,7 @@ const login = async ( page ) => {
     await page.goto( 'https://www.healthsherpa.com/sessions/new' );
 
     await page.waitForSelector( '#username_or_email' );
-    await page.type( '#username_or_email', process.env.USERNAME );
+    await page.type( '#username_or_email', process.env.USER );
 
     await page.waitForSelector( '#password' );
     await page.type( '#password', process.env.PASSWORD );
