@@ -32,7 +32,7 @@ const login = async ( page ) => {
 
 const setAgency = async ( page, dir ) => {
 
-    const agency_url = process.env.WEBSITE_URL + `&page=1&per_page=10&exchange=onEx&include_shared_applications=true&include_all_applications=true&${dir}[]=ffm_effective_date`;
+    const agency_url = process.env.WEBSITE_URL + `&page=1&per_page=50&exchange=onEx&include_shared_applications=true&include_all_applications=true&${dir}[]=ffm_effective_date`;
     await page.goto( agency_url );
 
     return process.env.AGENT_NAME;
@@ -98,7 +98,7 @@ const sherpaRefresh = async () => {
 
     await login( page );
 
-    await page.waitForTimeout( 3000 );
+    await page.waitForTimeout( 2000 );
 
     await findFfmError( page ); // optionally close the "integrate your ffm" modal
 
