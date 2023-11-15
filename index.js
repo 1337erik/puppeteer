@@ -10,7 +10,6 @@ puppeteer.use( StealthPlugin() );
 // https://github.com/intoli/user-agents
 // var userAgent = require('user-agents'); // NOT USED
 
-var rn = require( 'random-number' );
 require( 'dotenv' ).config();
 
 // ----------------------------------------------------------------------
@@ -21,18 +20,23 @@ const login = async ( page ) => {
     await page.goto( 'https://www.healthsherpa.com/sessions/new' );
 
     await page.waitForSelector( '#username_or_email' );
+    console.log( 'found username form field..' );
     await page.type( '#username_or_email', process.env.USER );
 
     await page.waitForSelector( '#password' );
+    console.log( 'found password form field..' );
     await page.type( '#password', process.env.PASSWORD );
 
     await page.waitForSelector( '#login-submit-button' );
+    console.log( 'logging in..' );
     await page.click( '#login-submit-button' );
 }
 
-const setAgency = async ( page, dir ) => {
+const setAgency = async ( page, dir, starting_page = 1 ) => {
 
-    const agency_url = process.env.WEBSITE_URL + `&page=1&per_page=50&exchange=onEx&include_shared_applications=true&include_all_applications=true&${dir}[]=ffm_effective_date`;
+    const agency_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG + process.env.COMMON_FILTERS + `&page=${starting_page}&${dir}[]=ffm_effective_date`;
+    console.log( 'setting agency..' );
+
     await page.goto( agency_url );
 
     return process.env.AGENT_NAME;
@@ -103,23 +107,28 @@ const sherpaRefresh = async () => {
     await findFfmError( page ); // optionally close the "integrate your ffm" modal
 
     // -- Variables for Settings --------------------------------------------
+    // -- This is what you edit - read the descriptions below
 
-    // const dir = 'asc';
-    const dir = 'desc';
+    // - Comment out one or the other to change the direction the page is sorted ( ascending or descending )
+    // const dir = 'asc'; // the oldest effective dates first
+    const dir = 'desc'; // the most recent effective dates first
 
+    // - Change these at the same time to be the same number
     const starting_page = 1;
+    let current_page    = 1;
+
 
     // -- Part 1, setup for either ondeck or mli --------------------------------------------------
 
-    const agent = await setAgency( page, dir );
+    const agent = await setAgency( page, dir, starting_page );
 
     // --------------------------------------------------------------------------------------------
     // -- Part 2, select each link ----------------------------------------------------------------
 
     // Wait for the table to be present on the page
+    console.log( 'searching for table element..' );
     await page.waitForSelector( 'table' );
 
-    let current_page = 1;
     let current_link = 0;
 
     while( true ){
