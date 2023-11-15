@@ -113,10 +113,8 @@ const sherpaRefresh = async () => {
     // const dir = 'asc'; // the oldest effective dates first
     const dir = 'desc'; // the most recent effective dates first
 
-    // - Change these at the same time to be the same number
+    // - Change starting_page to whatever page you want to start on
     const starting_page = 1;
-    let current_page    = 1;
-
 
     // -- Part 1, setup for either ondeck or mli --------------------------------------------------
 
@@ -129,7 +127,8 @@ const sherpaRefresh = async () => {
     console.log( 'searching for table element..' );
     await page.waitForSelector( 'table' );
 
-    let current_link = 0;
+    let current_page = 1; // DONT CHANGE THIS
+    let current_link = 0; // DONT CHANGE THIS
 
     while( true ){
 
