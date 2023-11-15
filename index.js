@@ -118,7 +118,7 @@ const sherpaRefresh = async () => {
 
     // -- Part 1, setup for either ondeck or mli --------------------------------------------------
 
-    const agent = await setAgency( page, dir, starting_page );
+    const agent = await setAgency( page, dir );
 
     // --------------------------------------------------------------------------------------------
     // -- Part 2, select each link ----------------------------------------------------------------
