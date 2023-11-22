@@ -14,6 +14,11 @@ require( 'dotenv' ).config();
 
 // ----------------------------------------------------------------------
 
+const isTruthy = ( value = '' ) => {
+
+    return [ true, 'true' ].includes( value );
+}
+
 
 const login = async ( page ) => {
 
@@ -35,20 +40,23 @@ const login = async ( page ) => {
     await page.click( '#login-submit-button' );
 }
 
-const setAgency = async ( page ) => {
+const setFilters = async ( page ) => {
 
     console.log( 'Setting Up Search Filters..' );
+    console.log( process.env );
+    console.log( !!process.env.FILTER_NAME );
+    console.log( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER ) ? 'yes' : 'no' );
 
     const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
     let extra_filters = [];
 
-    if( process.env.FILTER_FOR_UNPAID_BINDER ){ extra_filters.push( process.env.UNPAID_BINDER_FILER ); }
-    if( process.env.FILTER_FOR_PAID_BINDER   ){ extra_filters.push( process.env.PAID_BINDER_FILTER  ); }
-    if( process.env.FILTER_FOR_PAID          ){ extra_filters.push( process.env.PAID_FILTER         ); }
-    if( process.env.FILTER_FOR_PAST_DUE      ){ extra_filters.push( process.env.PAST_DUE_FILTER     ); }
-    if( process.env.FILTER_FOR_UNKNOWN       ){ extra_filters.push( process.env.UNKNOWN_FILTER      ); }
+    if( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER )){ extra_filters.push( process.env.UNPAID_BINDER_FILER ); }
+    if( isTruthy( process.env.FILTER_FOR_PAID_BINDER   )){ extra_filters.push( process.env.PAID_BINDER_FILTER  ); }
+    if( isTruthy( process.env.FILTER_FOR_PAID          )){ extra_filters.push( process.env.PAID_FILTER         ); }
+    if( isTruthy( process.env.FILTER_FOR_PAST_DUE      )){ extra_filters.push( process.env.PAST_DUE_FILTER     ); }
+    if( isTruthy( process.env.FILTER_FOR_UNKNOWN       )){ extra_filters.push( process.env.UNKNOWN_FILTER      ); }
 
-    if( process.env.INCLUDE_ARCHIVED         ){ extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.INCLUDE_ARCHIVE_FILTER ); }
+    if( isTruthy( process.env.INCLUDE_ARCHIVED )){ extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.INCLUDE_ARCHIVE_FILTER ); }
     else { extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.EXCLUDE_ARCHIVE_FILTER ); }
 
     if( !!process.env.FILTER_NAME ){ extra_filters.push( process.env.NAME_FILTER_BASE + process.env.FILTER_NAME ); }
@@ -56,7 +64,7 @@ const setAgency = async ( page ) => {
     if( process.env.FILTER_AGENCY ){ extra_filters.push( process.env.SCOPE_FILTER_BASE + 'true' ); }
     else { extra_filters.push( process.env.SCOPE_FILTER_BASE + 'false' ); }
 
-    if( process.env.FILTER_DESCENDING ){ extra_filters.push( 'desc[]=ffm_effective_date' ); }
+    if( isTruthy( process.env.FILTER_DESCENDING ) ){ extra_filters.push( 'desc[]=ffm_effective_date' ); }
     else { extra_filters.push( 'asc[]=ffm_effective_date' ); }
 
     const filter_string = extra_filters.join( '&' );
@@ -129,13 +137,13 @@ const sherpaRefresh = async () => {
 
     await login( page );
 
-    await page.waitForTimeout( 6000 );
+    await page.waitForTimeout( 3000 );
 
     await findFfmError( page ); // optionally close the "integrate your ffm" modal
 
     // -- Part 1, setup the page with filters --------------------------------------------------
 
-    const agent = await setAgency( page );
+    const agent = await setFilters( page );
 
     // --------------------------------------------------------------------------------------------
     // -- Part 2, select each link ----------------------------------------------------------------
