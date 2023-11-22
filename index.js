@@ -180,7 +180,7 @@ const sherpaRefresh = async () => {
                 try {
                     // The sporadic continue checkbox to grant permission
 
-                    await newTab.waitForSelector( '#application-access-grant-checkbox', { timeout: 5000 });
+                    await newTab.waitForSelector( '#application-access-grant-checkbox', { timeout: 4500 });
                     await newTab.click( '#application-access-grant-checkbox' );
 
                     console.log( 'Optional Permission Checkbox Detected..' );
@@ -198,14 +198,14 @@ const sherpaRefresh = async () => {
                 try {
                     // The enable-ede step with the yellow-background
 
-                    await newTab.waitForXPath( "//button[contains(text(), 'Enable EDE')]", { timeout: 5000 });
+                    await newTab.waitForXPath( "//button[contains(text(), 'Enable EDE')]", { timeout: 4500 });
 
                     const continueButton = await newTab.$x( "//button[contains(text(), 'Enable EDE')]" );
                     await continueButton[ 0 ].click();
 
                     console.log( 'Optional EDE Sync Enable Detected..' );
 
-                    await page.waitForTimeout( 10000 );
+                    await page.waitForTimeout( 8000 );
 
                 } catch ( e ){
 
