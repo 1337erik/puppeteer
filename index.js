@@ -21,7 +21,7 @@ const login = async ( page ) => {
 
     await page.waitForSelector( '#username_or_email' );
     console.log( 'found username form field..' );
-    await page.type( '#username_or_email', process.env.USER );
+    await page.type( '#username_or_email', process.env.USER_NAME );
 
     await page.waitForSelector( '#password' );
     console.log( 'found password form field..' );
@@ -29,15 +29,42 @@ const login = async ( page ) => {
 
     await page.waitForSelector( '#login-submit-button' );
     console.log( 'logging in..' );
+
+    await page.waitForTimeout( 2000 );
+
     await page.click( '#login-submit-button' );
 }
 
-const setAgency = async ( page, dir, starting_page = 1 ) => {
+const setAgency = async ( page ) => {
 
-    const agency_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG + process.env.COMMON_FILTERS + `&page=${starting_page}&${dir}[]=ffm_effective_date`;
-    console.log( 'setting agency..' );
+    console.log( 'Setting Up Search Filters..' );
 
-    await page.goto( agency_url );
+    const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
+    let extra_filters = [];
+
+    if( process.env.FILTER_FOR_UNPAID_BINDER ){ extra_filters.push( process.env.UNPAID_BINDER_FILER ); }
+    if( process.env.FILTER_FOR_PAID_BINDER   ){ extra_filters.push( process.env.PAID_BINDER_FILTER  ); }
+    if( process.env.FILTER_FOR_PAID          ){ extra_filters.push( process.env.PAID_FILTER         ); }
+    if( process.env.FILTER_FOR_PAST_DUE      ){ extra_filters.push( process.env.PAST_DUE_FILTER     ); }
+    if( process.env.FILTER_FOR_UNKNOWN       ){ extra_filters.push( process.env.UNKNOWN_FILTER      ); }
+
+    if( process.env.INCLUDE_ARCHIVED         ){ extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.INCLUDE_ARCHIVE_FILTER ); }
+    else { extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.EXCLUDE_ARCHIVE_FILTER ); }
+
+    if( !!process.env.FILTER_NAME ){ extra_filters.push( process.env.NAME_FILTER_BASE + process.env.FILTER_NAME ); }
+
+    if( process.env.FILTER_AGENCY ){ extra_filters.push( process.env.SCOPE_FILTER_BASE + 'true' ); }
+    else { extra_filters.push( process.env.SCOPE_FILTER_BASE + 'false' ); }
+
+    if( process.env.FILTER_DESCENDING ){ extra_filters.push( 'desc[]=ffm_effective_date' ); }
+    else { extra_filters.push( 'asc[]=ffm_effective_date' ); }
+
+    const filter_string = extra_filters.join( '&' );
+
+    const full_url = `${base_url}${process.env.COMMON_FILTERS}${filter_string}`;
+    console.log( full_url );
+
+    await page.goto( full_url );
 
     return process.env.AGENT_NAME;
 }
@@ -102,23 +129,13 @@ const sherpaRefresh = async () => {
 
     await login( page );
 
-    await page.waitForTimeout( 2000 );
+    await page.waitForTimeout( 6000 );
 
     await findFfmError( page ); // optionally close the "integrate your ffm" modal
 
-    // -- Variables for Settings --------------------------------------------
-    // -- This is what you edit - read the descriptions below
+    // -- Part 1, setup the page with filters --------------------------------------------------
 
-    // - Comment out one or the other to change the direction the page is sorted ( ascending or descending )
-    // const dir = 'asc'; // the oldest effective dates first
-    const dir = 'desc'; // the most recent effective dates first
-
-    // - Change starting_page to whatever page you want to start on
-    const starting_page = 1;
-
-    // -- Part 1, setup for either ondeck or mli --------------------------------------------------
-
-    const agent = await setAgency( page, dir );
+    const agent = await setAgency( page );
 
     // --------------------------------------------------------------------------------------------
     // -- Part 2, select each link ----------------------------------------------------------------
@@ -127,6 +144,7 @@ const sherpaRefresh = async () => {
     console.log( 'searching for table element..' );
     await page.waitForSelector( 'table' );
 
+    const starting_page = process.env.STARTING_PAGE || 1;
     let current_page = 1; // DONT CHANGE THIS
     let current_link = 0; // DONT CHANGE THIS
 
@@ -172,31 +190,26 @@ const sherpaRefresh = async () => {
                     const continueButton = await newTab.$x( "//button[contains(text(), 'Continue')]" );
                     await continueButton[ 0 ].click();
 
-                    passed_exception = true;
-
                 } catch ( e ){
 
                     // console.log( 'No Permission Step Detected..' ); // fail silently
                 }
 
-                if( !passed_exception ){
+                try {
+                    // The enable-ede step with the yellow-background
 
-                    try {
-                        // The enable-ede step with the yellow-background
+                    await newTab.waitForXPath( "//button[contains(text(), 'Enable EDE')]", { timeout: 5000 });
 
-                        await newTab.waitForXPath( "//button[contains(text(), 'Enable EDE')]", { timeout: 250 });
+                    const continueButton = await newTab.$x( "//button[contains(text(), 'Enable EDE')]" );
+                    await continueButton[ 0 ].click();
 
-                        const continueButton = await newTab.$x( "//button[contains(text(), 'Enable EDE')]" );
-                        await continueButton[ 0 ].click();
+                    console.log( 'Optional EDE Sync Enable Detected..' );
 
-                        console.log( 'Optional EDE Sync Enable Detected..' );
+                    await page.waitForTimeout( 10000 );
 
-                        await page.waitForTimeout( 6000 );
+                } catch ( e ){
 
-                    } catch ( e ){
-
-                        // console.log( 'No Enable EDE Step Detected..' ); // fail silently
-                    }
+                    // console.log( 'No Enable EDE Step Detected..' ); // fail silently
                 }
 
                 setTimeout( async () => {
