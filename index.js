@@ -42,10 +42,7 @@ const login = async ( page ) => {
 
 const setFilters = async ( page ) => {
 
-    console.log( 'Setting Up Search Filters..' );
-    console.log( process.env );
-    console.log( !!process.env.FILTER_NAME );
-    console.log( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER ) ? 'yes' : 'no' );
+    // console.log( process.env );
 
     const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
     let extra_filters = [];
@@ -61,7 +58,7 @@ const setFilters = async ( page ) => {
 
     if( !!process.env.FILTER_NAME ){ extra_filters.push( process.env.NAME_FILTER_BASE + process.env.FILTER_NAME ); }
 
-    if( process.env.FILTER_AGENCY ){ extra_filters.push( process.env.SCOPE_FILTER_BASE + 'true' ); }
+    if( isTruthy( process.env.FILTER_AGENCY ) ){ extra_filters.push( process.env.SCOPE_FILTER_BASE + 'true' ); }
     else { extra_filters.push( process.env.SCOPE_FILTER_BASE + 'false' ); }
 
     if( isTruthy( process.env.FILTER_DESCENDING ) ){ extra_filters.push( 'desc[]=ffm_effective_date' ); }
@@ -70,7 +67,7 @@ const setFilters = async ( page ) => {
     const filter_string = extra_filters.join( '&' );
 
     const full_url = `${base_url}${process.env.COMMON_FILTERS}${filter_string}`;
-    console.log( full_url );
+    // console.log( full_url );
 
     await page.goto( full_url );
 
