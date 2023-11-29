@@ -1,4 +1,5 @@
 const puppeteer = require( 'puppeteer-extra' );
+const fs = require( 'node:fs/promises' );
 
 const chromePaths = require( 'chrome-paths' );
 // const {executablePath} = require( 'puppeteer' );
@@ -12,11 +13,26 @@ puppeteer.use( StealthPlugin() );
 
 require( 'dotenv' ).config();
 
+const log_file_name = 'recorded-log.txt';
+
 // ----------------------------------------------------------------------
 
 const isTruthy = ( value = '' ) => {
 
     return [ true, 'true' ].includes( value );
+}
+
+async function log( msg = '', flag = 'a+' ){
+
+    try {
+
+        console.log( msg );
+        await fs.writeFile( log_file_name, `${msg}\n`, { flag: flag } );
+
+    } catch( err ){
+
+        console.log( 'Error Writing Log..', err );
+    }
 }
 
 
@@ -25,15 +41,15 @@ const login = async ( page ) => {
     await page.goto( 'https://www.healthsherpa.com/sessions/new' );
 
     await page.waitForSelector( '#username_or_email' );
-    console.log( 'found username form field..' );
+    await log( 'found username form field..' );
     await page.type( '#username_or_email', process.env.USER_NAME );
 
     await page.waitForSelector( '#password' );
-    console.log( 'found password form field..' );
+    await log( 'found password form field..' );
     await page.type( '#password', process.env.PASSWORD );
 
     await page.waitForSelector( '#login-submit-button' );
-    console.log( 'logging in..' );
+    await log( 'logging in..' );
 
     await page.waitForTimeout( 2000 );
 
@@ -42,7 +58,7 @@ const login = async ( page ) => {
 
 const setFilters = async ( page ) => {
 
-    // console.log( process.env );
+    // log( process.env );
 
     const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
     let extra_filters = [];
@@ -67,7 +83,7 @@ const setFilters = async ( page ) => {
     const filter_string = extra_filters.join( '&' );
 
     const full_url = `${base_url}${process.env.COMMON_FILTERS}${filter_string}`;
-    // console.log( full_url );
+    // log( full_url );
 
     await page.goto( full_url );
 
@@ -80,7 +96,7 @@ const findFfmError = async ( puppet_object ) => {
 
         await puppet_object.waitForSelector( '.fade.modal-backdrop', { timeout: 3000 } );
 
-        console.log( 'FFM Renew Alert Detected..' );
+        await log( 'FFM Renew Alert Detected..' );
 
         const closeButton = await puppet_object.$x( "//div[@style='position: absolute; top: 0px; right: 0px;']//button[contains(@aria-label,'Close') and text()-'X']" );
         await closeButton[ 0 ].click();
@@ -92,6 +108,8 @@ const findFfmError = async ( puppet_object ) => {
 }
 
 const sherpaRefresh = async () => {
+
+    await log( '', 'w+' ); // clears file
 
     const browser = await puppeteer.launch({
         headless: false,
@@ -146,7 +164,7 @@ const sherpaRefresh = async () => {
     // -- Part 2, select each link ----------------------------------------------------------------
 
     // Wait for the table to be present on the page
-    console.log( 'searching for table element..' );
+    await log( 'searching for table element..' );
     await page.waitForSelector( 'table' );
 
     const starting_page = process.env.STARTING_PAGE || 1;
@@ -159,9 +177,9 @@ const sherpaRefresh = async () => {
 
         if( current_page >= starting_page ){
 
-            console.log( '------------------------------' );
-            console.log( `Processing Page #${current_page}..` );
-            console.log( '' );
+            await log( '------------------------------' );
+            log( `Processing Page #${current_page}..` );
+            await log( '' );
 
             // Get all links from the current page
             const links = await page.$$( `table a[href*="/agents/${agent}"][target="_blank"]` );
@@ -175,8 +193,8 @@ const sherpaRefresh = async () => {
 
                 current_link++;
 
-                console.log( '------------------------------' );
-                console.log( `Processing Link #${current_link}: ${linkHref}..` );
+                await log( '------------------------------' );
+                log( `Processing Link #${current_link}: ${linkHref}..` );
 
                 await findFfmError( newTab ); // optionally close the "integrate your ffm" modal
 
@@ -188,7 +206,7 @@ const sherpaRefresh = async () => {
                     await newTab.waitForSelector( '#application-access-grant-checkbox', { timeout: 4500 });
                     await newTab.click( '#application-access-grant-checkbox' );
 
-                    console.log( 'Optional Permission Checkbox Detected..' );
+                    await log( 'Optional Permission Checkbox Detected..' );
 
                     await newTab.waitForXPath( "//button[contains(text(), 'Continue')]" );
 
@@ -197,7 +215,7 @@ const sherpaRefresh = async () => {
 
                 } catch ( e ){
 
-                    // console.log( 'No Permission Step Detected..' ); // fail silently
+                    // await log( 'No Permission Step Detected..' ); // fail silently
                 }
 
                 try {
@@ -208,13 +226,13 @@ const sherpaRefresh = async () => {
                     const continueButton = await newTab.$x( "//button[contains(text(), 'Enable EDE')]" );
                     await continueButton[ 0 ].click();
 
-                    console.log( 'Optional EDE Sync Enable Detected..' );
+                    await log( 'Optional EDE Sync Enable Detected..' );
 
                     await page.waitForTimeout( 8000 );
 
                 } catch ( e ){
 
-                    // console.log( 'No Enable EDE Step Detected..' ); // fail silently
+                    // await log( 'No Enable EDE Step Detected..' ); // fail silently
                 }
 
                 setTimeout( async () => {
@@ -224,11 +242,11 @@ const sherpaRefresh = async () => {
                     //     // Finding something on the page that implies the page is loaded..
 
                     //     const foundCaptcha = await newTab.$x( "//div[contains(text(), 'Recaptcha failed. Contact HealthSherpa for assistance')]", { timeout: 500 } );
-                    //     if( foundCaptcha ){ console.log( `-- Page #${current_page}, Link #${current_link} Had Captcha --` ); }
+                    //     if( foundCaptcha ){ log( `-- Page #${current_page}, Link #${current_link} Had Captcha --` ); }
 
                     // } catch( e ){
 
-                    //     // console.log( `-- Page #${current_page}, Link# ${current_link} Had Captcha --` );
+                    //     // log( `-- Page #${current_page}, Link# ${current_link} Had Captcha --` );
                     // }
 
                     try {
@@ -236,23 +254,23 @@ const sherpaRefresh = async () => {
 
                         // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
                         await newTab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
-                        console.log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
+                        log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
                         await newTab.close();
 
                     } catch( e ){
 
-                        console.log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
+                        log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
                         // await newTab.close();
                     }
 
-                    console.log( '------------------------------' );
+                    await log( '------------------------------' );
 
                 }, 500 );
             }
 
         } else{
 
-            console.log( `Skipping Page #${current_page}..` );
+            log( `Skipping Page #${current_page}..` );
         }
 
         current_page++;
@@ -268,7 +286,7 @@ const sherpaRefresh = async () => {
             if( isDisabled ){
                 // if the button also is disabled, we are at the end and can break..
 
-                console.log( `Next Button Disabled on Page #${current_page}..` );
+                log( `Next Button Disabled on Page #${current_page}..` );
                 break;
             }
 
@@ -281,7 +299,7 @@ const sherpaRefresh = async () => {
 
         } catch ( e ){
 
-            console.log( `No Next Button Found on Page #${current_page}..` );
+            log( `No Next Button Found on Page #${current_page}..` );
             break;
         }
     };
