@@ -182,19 +182,34 @@ const sherpaRefresh = async () => {
             await log( '' );
 
             // Get all links from the current page
-            const links = await page.$$( `table a[href*="/agents/${agent}"][target="_blank"]` );
+            const links = await page.$$( `table a[href*="/agents/${agent}"]` );
+
+            // Use Set to store unique href values
+            const uniqueLinksSet = new Set();
+
+            // Extract unique href values
+            for( const linkElement of links ){
+
+                const href = await page.evaluate( link => link.href, linkElement );
+                uniqueLinksSet.add( href );
+            }
+
+            // Convert Set to an array of unique href values
+            const uniqueLinks = Array.from( uniqueLinksSet );
+
+            // console.log( uniqueLinksSet, uniqueLinks );
 
             // Open each link in a new tab
-            for( const link of links ){
+            for( const link of uniqueLinks ){
 
-                const linkHref = await page.evaluate( link => link.href, link );
+                // const linkHref = await page.evaluate( link => link.href, link );
                 const newTab = await browser.newPage();
-                await newTab.goto( linkHref );
+                await newTab.goto( link );
 
                 current_link++;
 
                 await log( '------------------------------' );
-                log( `Processing Link #${current_link}: ${linkHref}..` );
+                log( `Processing Link #${current_link}: ${link}..` );
 
                 await findFfmError( newTab ); // optionally close the "integrate your ffm" modal
 
