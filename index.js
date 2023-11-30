@@ -83,7 +83,7 @@ const setFilters = async ( page ) => {
     const filter_string = extra_filters.join( '&' );
 
     const full_url = `${base_url}${process.env.COMMON_FILTERS}&${filter_string}`;
-    // log( full_url );
+    log( full_url );
 
     await page.goto( full_url );
 
