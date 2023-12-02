@@ -47,7 +47,6 @@ const timestamp = () => {
 
 const login = async ( page ) => {
 
-    timestamp();
     await page.goto( 'https://www.healthsherpa.com/sessions/new' );
 
     await page.waitForSelector( '#username_or_email' );
@@ -188,6 +187,7 @@ const sherpaRefresh = async () => {
         if( current_page >= starting_page ){
 
             await log( '------------------------------' );
+            timestamp();
             await log( `Processing Page #${current_page}..` );
             await log( '' );
 
@@ -207,7 +207,9 @@ const sherpaRefresh = async () => {
             // Convert Set to an array of unique href values
             const uniqueLinks = Array.from( uniqueLinksSet );
 
+            await log( '' );
             await log( `Found ${uniqueLinks} links on this page..` );
+            await log( '' );
 
             // Open each link in a new tab
             for( const link of uniqueLinks ){
@@ -287,6 +289,7 @@ const sherpaRefresh = async () => {
                         // await newTab.close();
                     }
 
+                    timestamp();
                     await log( '------------------------------' );
 
                 }, 500 );
