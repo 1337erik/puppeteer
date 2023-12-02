@@ -35,9 +35,19 @@ async function log( msg = '', flag = 'a+' ){
     }
 }
 
+const timestamp = () => {
+
+    const timestamp = new Date().toISOString()
+        .replace( /T/, ' ' )   // replace T with a space
+        .replace( /\..+/, '' ) // delete the dot and everything after
+
+    log( timestamp );
+}
+
 
 const login = async ( page ) => {
 
+    timestamp();
     await page.goto( 'https://www.healthsherpa.com/sessions/new' );
 
     await page.waitForSelector( '#username_or_email' );
@@ -58,7 +68,7 @@ const login = async ( page ) => {
 
 const setFilters = async ( page ) => {
 
-    // log( process.env );
+    // await log( process.env );
 
     const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
     let extra_filters = [];
@@ -83,7 +93,7 @@ const setFilters = async ( page ) => {
     const filter_string = extra_filters.join( '&' );
 
     const full_url = `${base_url}${process.env.COMMON_FILTERS}&${filter_string}`;
-    log( full_url );
+    await log( full_url );
 
     await page.goto( full_url );
 
@@ -164,7 +174,7 @@ const sherpaRefresh = async () => {
     // -- Part 2, select each link ----------------------------------------------------------------
 
     // Wait for the table to be present on the page
-    await log( 'searching for table element..' );
+    await log( 'searching for table..' );
     await page.waitForSelector( 'table' );
 
     const starting_page = process.env.STARTING_PAGE || 1;
@@ -178,7 +188,7 @@ const sherpaRefresh = async () => {
         if( current_page >= starting_page ){
 
             await log( '------------------------------' );
-            log( `Processing Page #${current_page}..` );
+            await log( `Processing Page #${current_page}..` );
             await log( '' );
 
             // Get all links from the current page
@@ -197,7 +207,7 @@ const sherpaRefresh = async () => {
             // Convert Set to an array of unique href values
             const uniqueLinks = Array.from( uniqueLinksSet );
 
-            // console.log( uniqueLinksSet, uniqueLinks );
+            await log( `Found ${uniqueLinks} links on this page..` );
 
             // Open each link in a new tab
             for( const link of uniqueLinks ){
@@ -209,11 +219,10 @@ const sherpaRefresh = async () => {
                 current_link++;
 
                 await log( '------------------------------' );
-                log( `Processing Link #${current_link}: ${link}..` );
+                timestamp();
+                await log( `Processing Link #${current_link}: ${link}..` );
 
                 await findFfmError( newTab ); // optionally close the "integrate your ffm" modal
-
-                let passed_exception = false;
 
                 try {
                     // The sporadic continue checkbox to grant permission
@@ -269,12 +278,12 @@ const sherpaRefresh = async () => {
 
                         // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
                         await newTab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
-                        log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
+                        await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
                         await newTab.close();
 
                     } catch( e ){
 
-                        log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
+                        await log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
                         // await newTab.close();
                     }
 
@@ -285,7 +294,7 @@ const sherpaRefresh = async () => {
 
         } else{
 
-            log( `Skipping Page #${current_page}..` );
+            await log( `Skipping Page #${current_page}..` );
         }
 
         current_page++;
@@ -301,7 +310,7 @@ const sherpaRefresh = async () => {
             if( isDisabled ){
                 // if the button also is disabled, we are at the end and can break..
 
-                log( `Next Button Disabled on Page #${current_page}..` );
+                await log( `Next Button Disabled on Page #${current_page}, most likely the last page..` );
                 break;
             }
 
@@ -314,7 +323,7 @@ const sherpaRefresh = async () => {
 
         } catch ( e ){
 
-            log( `No Next Button Found on Page #${current_page}..` );
+            await log( `No Next Button Found on Page #${current_page}..` );
             break;
         }
     };
