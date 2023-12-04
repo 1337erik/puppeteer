@@ -37,9 +37,9 @@ async function log( msg = '', flag = 'a+' ){
 
 const timestamp = () => {
 
-    const timestamp = new Date().toISOString()
-        .replace( /T/, ' ' )   // replace T with a space
-        .replace( /\..+/, '' ) // delete the dot and everything after
+    const timestamp = new Date().toString();
+        // .replace( /T/, ' ' )   // replace T with a space
+        // .replace( /\..+/, '' ) // delete the dot and everything after
 
     log( timestamp );
 }
