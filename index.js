@@ -208,7 +208,7 @@ const sherpaRefresh = async () => {
             const uniqueLinks = Array.from( uniqueLinksSet );
 
             await log( '' );
-            await log( `Found ${uniqueLinks} links on this page..` );
+            await log( `Found ${uniqueLinks.length} links on this page..` );
             await log( '' );
 
             // Open each link in a new tab
