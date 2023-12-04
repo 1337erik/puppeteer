@@ -72,11 +72,11 @@ const setFilters = async ( page ) => {
     const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
     let extra_filters = [];
 
-    if( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER )){ extra_filters.push( process.env.UNPAID_BINDER_FILER ); }
-    if( isTruthy( process.env.FILTER_FOR_PAID_BINDER   )){ extra_filters.push( process.env.PAID_BINDER_FILTER  ); }
-    if( isTruthy( process.env.FILTER_FOR_PAID          )){ extra_filters.push( process.env.PAID_FILTER         ); }
-    if( isTruthy( process.env.FILTER_FOR_PAST_DUE      )){ extra_filters.push( process.env.PAST_DUE_FILTER     ); }
-    if( isTruthy( process.env.FILTER_FOR_UNKNOWN       )){ extra_filters.push( process.env.UNKNOWN_FILTER      ); }
+    if( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER )){ extra_filters.push( process.env.UNPAID_BINDER_FITLER ); }
+    if( isTruthy( process.env.FILTER_FOR_PAID_BINDER   )){ extra_filters.push( process.env.PAID_BINDER_FILTER   ); }
+    if( isTruthy( process.env.FILTER_FOR_PAID          )){ extra_filters.push( process.env.PAID_FILTER          ); }
+    if( isTruthy( process.env.FILTER_FOR_PAST_DUE      )){ extra_filters.push( process.env.PAST_DUE_FILTER      ); }
+    if( isTruthy( process.env.FILTER_FOR_UNKNOWN       )){ extra_filters.push( process.env.UNKNOWN_FILTER       ); }
 
     if( isTruthy( process.env.INCLUDE_ARCHIVED )){ extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.INCLUDE_ARCHIVE_FILTER ); }
     else { extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.EXCLUDE_ARCHIVE_FILTER ); }
@@ -88,6 +88,10 @@ const setFilters = async ( page ) => {
 
     if( isTruthy( process.env.FILTER_DESCENDING ) ){ extra_filters.push( 'desc[]=ffm_effective_date' ); }
     else { extra_filters.push( 'asc[]=ffm_effective_date' ); }
+
+    if( isTruthy( process.env.FILTER_2022 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2022' ); }
+    if( isTruthy( process.env.FILTER_2023 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2023' ); }
+    if( isTruthy( process.env.FILTER_2024 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2024' ); }
 
     const filter_string = extra_filters.join( '&' );
 
