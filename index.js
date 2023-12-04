@@ -72,7 +72,7 @@ const setFilters = async ( page ) => {
     const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
     let extra_filters = [];
 
-    if( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER )){ extra_filters.push( process.env.UNPAID_BINDER_FITLER ); }
+    if( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER )){ extra_filters.push( process.env.UNPAID_BINDER_FILTER ); }
     if( isTruthy( process.env.FILTER_FOR_PAID_BINDER   )){ extra_filters.push( process.env.PAID_BINDER_FILTER   ); }
     if( isTruthy( process.env.FILTER_FOR_PAID          )){ extra_filters.push( process.env.PAID_FILTER          ); }
     if( isTruthy( process.env.FILTER_FOR_PAST_DUE      )){ extra_filters.push( process.env.PAST_DUE_FILTER      ); }
