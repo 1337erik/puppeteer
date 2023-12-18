@@ -282,6 +282,23 @@ const sherpaRefresh = async () => {
                     try {
                         // Finding something on the page that implies the page is loaded..
 
+                        // Scroll to the bottom of the page slowly
+                        await newTab.evaluate( async () => {
+
+                            await new Promise(( resolve ) => {
+
+                                const scrollInterval = setInterval( () => {
+
+                                    window.scrollBy( 0, 55 ); // You can adjust the scroll distance here
+                                    if( document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight ){
+
+                                        clearInterval( scrollInterval );
+                                        resolve();
+                                    }
+                                }, 100 ); // You can adjust the interval here
+                            });
+                        });
+
                         // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
                         await newTab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
                         await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
