@@ -252,7 +252,16 @@ const sherpaRefresh = async () => {
             // Open each link in a new tab
             for( const link of uniqueLinks ){
 
-                await trimOpenPages( browser, page );
+                try {
+
+                    await trimOpenPages( browser, page );
+
+                } catch ( e) {
+
+                    await log( `-- Trimming Tab Error --` );
+                    await log( `ERROR MSG - ${e.message}` );
+                    await log( '' );
+                }
 
                 // const linkHref = await page.evaluate( link => link.href, link );
                 await log( '------------------------------' );
@@ -326,27 +335,34 @@ const trimOpenPages = async ( browser, main_page ) => {
     let allPages = await browser.pages();
 
     let selected_tab = null;
-    const page_count = allPages.length;
+    let page_count = allPages.length;
     if( page_count < 4 ){
 
         return await log( `${page_count} Pages Open, 4 Pages Minimum, Skipping..` );
     }
 
-    for( let i = 1; i < allPages.length - 1; i++ ){
+    for( let i = page_count - 1; i > 1; i-- ){
 
         selected_tab = allPages[ i ];
         if( selected_tab == main_page ){ continue; }
 
         await selected_tab.waitForTimeout( 500 );
 
-        await closeTab( selected_tab );
-        // await log( `Closing Tab..` );
-        // await selected_tab.bringToFront();
-        // await selected_tab.waitForTimeout( 2000 );
-        // await selected_tab.close();
-        // await selected_tab.waitForTimeout( 2000 );
+        try {
+
+            await closeTab( selected_tab );
+
+        } catch ( e) {
+
+            await log( `-- Closing Tab Error --` );
+            await log( `ERROR MSG - ${e.message}` );
+            await log( '' );
+            continue;
+        }
     }
 
+    allPages = await browser.pages();
+    page_count = allPages.length;
     const last_page = allPages[ page_count - 1 ];
 
     await last_page.bringToFront();
