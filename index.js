@@ -32,6 +32,10 @@ async function log( msg = '', flag = 'a+' ){
     } catch( err ){
 
         console.log( 'Error Writing Log..', err );
+
+    } finally {
+
+        return;
     }
 }
 
@@ -119,9 +123,10 @@ const findFfmError = async ( puppet_object ) => {
     } catch( e ) {
 
         // fail silently..
-    }
+    } finally {
 
-    return;
+        return;
+    }
 }
 
 const sherpaRefresh = async () => {
@@ -256,12 +261,14 @@ const sherpaRefresh = async () => {
 
                     await trimOpenPages( browser, page );
 
-                } catch ( e) {
+                } catch ( e ) {
 
                     await log( `-- Trimming Tab Error --` );
                     await log( `ERROR MSG - ${e.message}` );
                     await log( '' );
                 }
+
+                await page.waitForTimeout( 2000 );
 
                 // const linkHref = await page.evaluate( link => link.href, link );
                 await log( '------------------------------' );
@@ -457,16 +464,37 @@ const closeTab = async ( tab, current_page = '', current_link = '' ) => {
         await log( `-- Tab Failed to Load --` );
         await log( `ERROR MSG - ${e.message}` );
         await log( '' );
+
+    } finally {
+
+        await tab.waitForTimeout( 2000 );
+
+        await tab.close();
+
+        timestamp();
+        return await log( '------------------------------' );
     }
-
-    await tab.waitForTimeout( 2000 );
-
-    await tab.close();
-
-    timestamp();
-    return await log( '------------------------------' );
-
 }
+
+async function isPageAccessible( page_object ){
+
+    try {
+
+      // Attempt a harmless operation to check if the page is still accessible
+      await page_object.title();
+      return true; // Page is accessible
+
+    } catch ( error ){
+
+        if( error.message.includes( 'Target closed' ) ){
+
+            return false; // Page is closed
+        }
+
+        throw error; // Some other unexpected error
+    }
+    return false;
+  }
 
 /** @deprecated */
 const closePreviousTab = async ( browser, main_page, current_page, current_link ) => {
@@ -528,10 +556,12 @@ const closePreviousTab = async ( browser, main_page, current_page, current_link 
             await log( `ERROR MSG - ${e.message}` );
             await log( '' );
             // await newTab.close();
-        }
 
-        timestamp();
-        await log( '------------------------------' );
+        } finally {
+
+            timestamp();
+            await log( '------------------------------' );
+        }
 
     // }, 500 );
 }
