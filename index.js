@@ -323,9 +323,9 @@ const trimOpenPages = async ( browser, main_page ) => {
 
     let selected_tab = null;
     const page_count = allPages.length;
-    if( page_count <= 4 ){
+    if( page_count < 4 ){
 
-        await log( 'Less than 4 pages open, skipping..' );
+        await log( 'Less Than 4 Pages Open, Skipping..' );
         return;
     }
 
@@ -333,14 +333,18 @@ const trimOpenPages = async ( browser, main_page ) => {
 
         selected_tab = allPages[ i ];
         if( selected_tab == main_page ){ continue; }
-        await log( `Closing Tab..` );
-        await selected_tab.bringToFront();
-        await selected_tab.waitForTimeout( 2000 );
-        await selected_tab.close();
-        await selected_tab.waitForTimeout( 2000 );
+
+        await selected_tab.waitForTimeout( 500 );
+
+        await closeTab( selected_tab );
+        // await log( `Closing Tab..` );
+        // await selected_tab.bringToFront();
+        // await selected_tab.waitForTimeout( 2000 );
+        // await selected_tab.close();
+        // await selected_tab.waitForTimeout( 2000 );
     }
 
-    await log( 'Finished trimming..' );
+    await log( 'Finished Trimming..' );
 
     await selected_tab.waitForTimeout( 500 );
 }
@@ -406,34 +410,35 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
             });
         });
 
-        await closeTab( newTab, current_page, current_link );
+        // await closeTab( newTab, current_page, current_link );
 
     }, 500 );
 }
 
-const closeTab = async ( tab, current_page, current_link ) => {
+const closeTab = async ( tab, current_page = '', current_link = '' ) => {
 
     try {
 
-        await log( `Targeting Link #${current_link}..` );
+        // await log( `Bringing Link to Front ${current_link}..` );
+        await log( `Bringing Tab to Front..` );
         await tab.bringToFront();
-
-        await log( `Closing Tab ${current_link}..` );
-
-        await tab.waitForTimeout( 3000 );
 
         // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
         await tab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
-        await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
-        await tab.close();
+        // await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
+        await log( `-- Tab Loaded Successfully --` );
 
     } catch( e ){
 
-        await log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
+        // await log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
+        await log( `-- Tab Failed to Load --` );
         await log( `ERROR MSG - ${e.message}` );
         await log( '' );
-        // await newTab.close();
     }
+
+    await tab.waitForTimeout( 2000 );
+
+    await tab.close();
 
     timestamp();
     await log( '------------------------------' );
