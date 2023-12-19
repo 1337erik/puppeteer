@@ -225,7 +225,7 @@ const sherpaRefresh = async () => {
 
     while( true ){
 
-        await page.waitForTimeout( 2000 );
+        await page.waitForTimeout( 1000 );
 
         if( current_page >= starting_page ){
 
@@ -268,7 +268,7 @@ const sherpaRefresh = async () => {
                     await log( '' );
                 }
 
-                await page.waitForTimeout( 2000 );
+                await page.waitForTimeout( 500 );
 
                 // const linkHref = await page.evaluate( link => link.href, link );
                 await log( '------------------------------' );
@@ -411,14 +411,14 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
 
         await log( 'Optional EDE Sync Enable Detected..' );
 
-        await page.waitForTimeout( 8000 );
+        await newTab.waitForTimeout( 8000 );
 
     } catch ( e ){
 
         // await log( 'No Enable EDE Step Detected..' ); // fail silently
     }
 
-    setTimeout( async () => {
+    // setTimeout( async () => {
 
         await log( `Scrolling Tab ${current_link}..` );
         // Scroll to the bottom of the page slowly
@@ -428,7 +428,7 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
 
                 const scrollInterval = setInterval( () => {
 
-                    window.scrollBy( 0, 55 ); // You can adjust the scroll distance here
+                    window.scrollBy( 0, 250 ); // You can adjust the scroll distance here
                     if( document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight ){
 
                         clearInterval( scrollInterval );
@@ -438,38 +438,44 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
             });
         });
 
-        // await closeTab( newTab, current_page, current_link );
+        await closeTab( newTab, current_page, current_link );
 
-    }, 500 );
+    // }, 150 );
 
     return await log( 'Tab finished..' );
 }
 
-const closeTab = async ( tab, current_page = '', current_link = '' ) => {
+const closeTab = async ( tab, current_page = null, current_link = null ) => {
 
     try {
 
-        // await log( `Bringing Link to Front ${current_link}..` );
-        await log( `Bringing Tab to Front..` );
-        await tab.bringToFront();
+        if( current_link ){ await log( `Bringing Link to Front ${current_link}..` ); }
+        else { await log( `Bringing Tab to Front..` ); }
 
         // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
         await tab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
-        // await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
-        await log( `-- Tab Loaded Successfully --` );
+
+        if( current_link ){ await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` ); }
+        else { await log( `-- Tab Loaded Successfully --` ); }
 
     } catch( e ){
 
-        // await log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
-        await log( `-- Tab Failed to Load --` );
+        if( current_link ){ await log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` ); }
+        else { await log( `-- Tab Failed to Load --` ); }
+
         await log( `ERROR MSG - ${e.message}` );
         await log( '' );
 
     } finally {
 
-        await tab.waitForTimeout( 2000 );
+        if( await isPageAccessible( tab ) ){
 
-        await tab.close();
+            await tab.bringToFront();
+
+            await tab.waitForTimeout( 2000 );
+            await log( `Closing Tab..` );
+            await tab.close();
+        }
 
         timestamp();
         return await log( '------------------------------' );
