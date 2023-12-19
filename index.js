@@ -184,8 +184,6 @@ const sherpaRefresh = async () => {
     let current_page = 1; // DONT CHANGE THIS
     let current_link = 0; // DONT CHANGE THIS
 
-    let allPages;
-
     while( true ){
 
         await page.waitForTimeout( 2000 );
@@ -221,126 +219,18 @@ const sherpaRefresh = async () => {
             for( const link of uniqueLinks ){
 
                 // const linkHref = await page.evaluate( link => link.href, link );
-                let newTab = await browser.newPage();
-                await newTab.goto( link );
-
-                current_link++;
-
                 await log( '------------------------------' );
                 timestamp();
                 await log( `Processing Link #${current_link}: ${link}..` );
 
-                await findFfmError( newTab ); // optionally close the "integrate your ffm" modal
+                await processTab( await browser.newPage(), link );
 
-                try {
-                    // The sporadic continue checkbox to grant permission
+                await closePreviousTab( browser, page, current_page, current_link );
 
-                    await newTab.waitForSelector( '#application-access-grant-checkbox', { timeout: 4500 });
-                    await newTab.click( '#application-access-grant-checkbox' );
-
-                    await log( 'Optional Permission Checkbox Detected..' );
-
-                    await newTab.waitForXPath( "//button[contains(text(), 'Continue')]" );
-
-                    const continueButton = await newTab.$x( "//button[contains(text(), 'Continue')]" );
-                    await continueButton[ 0 ].click();
-
-                } catch ( e ){
-
-                    // await log( 'No Permission Step Detected..' ); // fail silently
-                }
-
-                try {
-                    // The enable-ede step with the yellow-background
-
-                    await newTab.waitForXPath( "//button[contains(text(), 'Enable EDE')]", { timeout: 4500 });
-
-                    const continueButton = await newTab.$x( "//button[contains(text(), 'Enable EDE')]" );
-                    await continueButton[ 0 ].click();
-
-                    await log( 'Optional EDE Sync Enable Detected..' );
-
-                    await page.waitForTimeout( 8000 );
-
-                } catch ( e ){
-
-                    // await log( 'No Enable EDE Step Detected..' ); // fail silently
-                }
-
-                setTimeout( async () => {
-                    // Close the new tab after waiting, throw into a setTimeout in hopes of running async
-
-                    // try {
-                    //     // Finding something on the page that implies the page is loaded..
-
-                    //     const foundCaptcha = await newTab.$x( "//div[contains(text(), 'Recaptcha failed. Contact HealthSherpa for assistance')]", { timeout: 500 } );
-                    //     if( foundCaptcha ){ log( `-- Page #${current_page}, Link #${current_link} Had Captcha --` ); }
-
-                    // } catch( e ){
-
-                    //     // log( `-- Page #${current_page}, Link# ${current_link} Had Captcha --` );
-                    // }
-
-                    try {
-                        // Finding something on the page that implies the page is loaded..
-
-                        await log( 'Scrolling Tab..' );
-                        // Scroll to the bottom of the page slowly
-                        await newTab.evaluate( async () => {
-
-                            await new Promise(( resolve ) => {
-
-                                const scrollInterval = setInterval( () => {
-
-                                    window.scrollBy( 0, 55 ); // You can adjust the scroll distance here
-                                    if( document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight ){
-
-                                        clearInterval( scrollInterval );
-                                        resolve();
-                                    }
-                                }, 100 ); // You can adjust the interval here
-                            });
-                        });
-
-                        // Get all open pages
-                        allPages = await browser.pages();
-
-                        // Find the index of page2
-                        const tabIndex = allPages.findIndex(( page ) => page === newTab );
-                        await log( `Last Tab Index: ${tabIndex}` );
-
-                        if( tabIndex !== -1 ){
-
-                            // Bring the second page into focus (make it the active tab)
-                            await log( 'Switching tabs...' );
-                            await allPages[ tabIndex ].bringToFront();
-
-                        } else {
-
-                            await log( 'Error identifying tab to bring to front, let Erik know' );
-                        }
-
-                        await newTab.waitForTimeout( 3000 );
-
-                        // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
-                        await newTab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
-                        await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
-
-                        await newTab.close();
-
-                    } catch( e ){
-
-                        await log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
-                        // await newTab.close();
-                    }
-
-                    timestamp();
-                    await log( '------------------------------' );
-
-                }, 500 );
+                current_link++;
             }
 
-        } else{
+        } else {
 
             await log( `Skipping Page #${current_page}..` );
         }
@@ -376,6 +266,134 @@ const sherpaRefresh = async () => {
         }
     };
 };
+
+const processTab = async ( newTab, link ) => {
+
+    await newTab.goto( link );
+
+    await findFfmError( newTab ); // optionally close the "integrate your ffm" modal
+
+    try {
+        // The sporadic continue checkbox to grant permission
+
+        await newTab.waitForSelector( '#application-access-grant-checkbox', { timeout: 4500 });
+        await newTab.click( '#application-access-grant-checkbox' );
+
+        await log( 'Optional Permission Checkbox Detected..' );
+
+        await newTab.waitForXPath( "//button[contains(text(), 'Continue')]" );
+
+        const continueButton = await newTab.$x( "//button[contains(text(), 'Continue')]" );
+        await continueButton[ 0 ].click();
+
+    } catch ( e ){
+
+        // await log( 'No Permission Step Detected..' ); // fail silently
+    }
+
+    try {
+        // The enable-ede step with the yellow-background
+
+        await newTab.waitForXPath( "//button[contains(text(), 'Enable EDE')]", { timeout: 4500 });
+
+        const continueButton = await newTab.$x( "//button[contains(text(), 'Enable EDE')]" );
+        await continueButton[ 0 ].click();
+
+        await log( 'Optional EDE Sync Enable Detected..' );
+
+        await page.waitForTimeout( 8000 );
+
+    } catch ( e ){
+
+        // await log( 'No Enable EDE Step Detected..' ); // fail silently
+    }
+
+    setTimeout( async () => {
+
+        await log( 'Scrolling Tab..' );
+        // Scroll to the bottom of the page slowly
+        await newTab.evaluate( async () => {
+
+            await new Promise(( resolve ) => {
+
+                const scrollInterval = setInterval( () => {
+
+                    window.scrollBy( 0, 55 ); // You can adjust the scroll distance here
+                    if( document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight ){
+
+                        clearInterval( scrollInterval );
+                        resolve();
+                    }
+                }, 100 ); // You can adjust the interval here
+            });
+        });
+
+    }, 500 );
+}
+
+const closePreviousTab = async ( browser, page, current_page, current_link ) => {
+
+    // setTimeout( async () => {
+        // Close the new tab after waiting, throw into a setTimeout in hopes of running async
+
+        // try {
+        //     // Finding something on the page that implies the page is loaded..
+
+        //     const foundCaptcha = await newTab.$x( "//div[contains(text(), 'Recaptcha failed. Contact HealthSherpa for assistance')]", { timeout: 500 } );
+        //     if( foundCaptcha ){ log( `-- Page #${current_page}, Link #${current_link} Had Captcha --` ); }
+
+        // } catch( e ){
+
+        //     // log( `-- Page #${current_page}, Link# ${current_link} Had Captcha --` );
+        // }
+
+        try {
+            // Finding something on the page that implies the page is loaded..
+
+            // Get all open pages
+            let allPages = await browser.pages();
+
+            // Find the index of page2
+            // const tabIndex = allPages.findIndex(( page ) => page === newTab );
+            const tabIndex = allPages.length - 2;
+            await log( `Targeting Tab Index: ${tabIndex}..` );
+
+            if( tabIndex !== -1 ){
+
+                // Bring the second page into focus (make it the active tab)
+                await log( 'Switching tabs...' );
+                const selected_tab = allPages[ tabIndex ];
+                await selected_tab.bringToFront();
+
+                if( selected_tab !== page ){
+
+                    await selected_tab.waitForTimeout( 3000 );
+
+                    // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
+                    await selected_tab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
+                    await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
+        
+                    await selected_tab.close();
+                }
+
+            } else {
+
+                await log( 'Error Identifying Tab, let Erik know..' );
+            }
+
+        } catch( e ){
+
+            await log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
+            await log( `ERROR MSG - ${e.message}` );
+            await log( '' );
+            // await newTab.close();
+        }
+
+        timestamp();
+        await log( '------------------------------' );
+
+    // }, 500 );
+}
 
 
 // -- Unused snippets for selecting filters --------------------------------------------------
