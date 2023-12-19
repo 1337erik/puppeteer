@@ -77,6 +77,8 @@ const setFilters = async ( page ) => {
     if( isTruthy( process.env.FILTER_FOR_PAID          )){ extra_filters.push( process.env.PAID_FILTER          ); }
     if( isTruthy( process.env.FILTER_FOR_PAST_DUE      )){ extra_filters.push( process.env.PAST_DUE_FILTER      ); }
     if( isTruthy( process.env.FILTER_FOR_UNKNOWN       )){ extra_filters.push( process.env.UNKNOWN_FILTER       ); }
+    if( isTruthy( process.env.FILTER_FOR_CANCELLED     )){ extra_filters.push( process.env.CANCEL_FILTER       ); }
+    if( isTruthy( process.env.FILTER_FOR_TERMINATED    )){ extra_filters.push( process.env.TERMED_FILTER       ); }
 
     if( isTruthy( process.env.INCLUDE_ARCHIVED )){ extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.INCLUDE_ARCHIVE_FILTER ); }
     else { extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.EXCLUDE_ARCHIVE_FILTER ); }
