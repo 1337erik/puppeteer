@@ -422,25 +422,27 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
 
     // setTimeout( async () => {
 
-        await log( `Scrolling Tab ${current_link}..` );
-        // Scroll to the bottom of the page slowly
-        await newTab.evaluate( async () => {
+    await log( `Scrolling Tab ${current_link}..` );
+    // Scroll to the bottom of the page slowly
+    await newTab.evaluate( async () => {
 
-            await new Promise(( resolve ) => {
+        await new Promise(( resolve ) => {
 
-                const scrollInterval = setInterval( () => {
+            let current_iteration = 0;
+            const scrollInterval = setInterval( () => {
 
-                    window.scrollBy( 0, 250 ); // You can adjust the scroll distance here
-                    if( document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight ){
+                window.scrollBy( 0, 250 ); // You can adjust the scroll distance here
+                current_iteration++;
+                if( document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight || current_iteration >= 10 ){
 
-                        clearInterval( scrollInterval );
-                        resolve();
-                    }
-                }, 100 ); // You can adjust the interval here
-            });
+                    clearInterval( scrollInterval );
+                    resolve();
+                }
+            }, 100 ); // You can adjust the interval here
         });
+    });
 
-        return await closeTab( newTab, current_page, current_link );
+    return await closeTab( newTab, current_page, current_link );
 
     // }, 150 );
 }
