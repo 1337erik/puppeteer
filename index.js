@@ -413,7 +413,7 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
 
         await log( 'Optional EDE Sync Enable Detected..' );
 
-        await newTab.waitForTimeout( 15000 );
+        await newTab.waitForTimeout( 16000 );
 
     } catch ( e ){
 
