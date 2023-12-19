@@ -346,7 +346,7 @@ const trimOpenPages = async ( browser, main_page ) => {
 
     await log( 'Finished Trimming..' );
 
-    await selected_tab.waitForTimeout( 500 );
+    await main_page.waitForTimeout( 500 );
 }
 
 const processTab = async ( newTab, link, current_page, current_link ) => {
