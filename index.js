@@ -62,7 +62,7 @@ const login = async ( page ) => {
 
     await page.waitForTimeout( 2000 );
 
-    await page.click( '#login-submit-button' );
+    return await page.click( '#login-submit-button' );
 }
 
 const setFilters = async ( page ) => {
@@ -120,6 +120,8 @@ const findFfmError = async ( puppet_object ) => {
 
         // fail silently..
     }
+
+    return;
 }
 
 const sherpaRefresh = async () => {
@@ -259,7 +261,9 @@ const sherpaRefresh = async () => {
 
                 try {
 
+                    // ******************************************************************************************
                     await processTab( await browser.newPage(), link, current_page, current_link );
+                    // ******************************************************************************************
 
                 } catch( e ){
 
@@ -325,8 +329,7 @@ const trimOpenPages = async ( browser, main_page ) => {
     const page_count = allPages.length;
     if( page_count < 4 ){
 
-        await log( 'Less Than 4 Pages Open, Skipping..' );
-        return;
+        return await log( `${page_count} Pages Open, 4 Pages Minimum, Skipping..` );
     }
 
     for( let i = 1; i < allPages.length - 1; i++ ){
@@ -344,9 +347,11 @@ const trimOpenPages = async ( browser, main_page ) => {
         // await selected_tab.waitForTimeout( 2000 );
     }
 
-    await log( 'Finished Trimming..' );
+    const last_page = allPages[ page_count - 1 ];
 
-    await main_page.waitForTimeout( 500 );
+    await last_page.bringToFront();
+    await log( 'Finished Trimming..' );
+    return await last_page.waitForTimeout( 500 );
 }
 
 const processTab = async ( newTab, link, current_page, current_link ) => {
@@ -413,6 +418,8 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
         // await closeTab( newTab, current_page, current_link );
 
     }, 500 );
+
+    return await log( 'Tab finished..' );
 }
 
 const closeTab = async ( tab, current_page = '', current_link = '' ) => {
@@ -441,7 +448,7 @@ const closeTab = async ( tab, current_page = '', current_link = '' ) => {
     await tab.close();
 
     timestamp();
-    await log( '------------------------------' );
+    return await log( '------------------------------' );
 
 }
 
