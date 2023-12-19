@@ -336,6 +336,7 @@ const sherpaRefresh = async () => {
  */
 const trimOpenPages = async ( browser, main_page ) => {
 
+    await log( '' );
     await log( 'Checking to see if page trimming necessary..' );
 
     // Get all open pages
