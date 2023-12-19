@@ -365,15 +365,18 @@ const closePreviousTab = async ( browser, page, current_page, current_link ) => 
                 const selected_tab = allPages[ tabIndex ];
                 await selected_tab.bringToFront();
 
-                if( selected_tab !== page ){
+                const on_main_page = ( selected_tab == page );
+                await log( on_main_page ? 'Main Page detected, not closing..' : 'Closing Tab..' );
+
+                if( !on_main_page ){
 
                     await selected_tab.waitForTimeout( 3000 );
 
                     // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
                     await selected_tab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
                     await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
-        
                     await selected_tab.close();
+
                 }
 
             } else {
