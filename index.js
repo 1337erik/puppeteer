@@ -76,6 +76,8 @@ const setFilters = async ( page ) => {
     const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
     let extra_filters = [];
 
+    // extra_filters.push( 'per_page=' + process.env.PAGE_COUNT );
+
     if( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER )){ extra_filters.push( process.env.UNPAID_BINDER_FILTER ); }
     if( isTruthy( process.env.FILTER_FOR_PAID_BINDER   )){ extra_filters.push( process.env.PAID_BINDER_FILTER   ); }
     if( isTruthy( process.env.FILTER_FOR_PAID          )){ extra_filters.push( process.env.PAID_FILTER          ); }
@@ -233,6 +235,8 @@ const sherpaRefresh = async () => {
             timestamp();
             await log( `Processing Page #${current_page}..` );
             await log( '' );
+
+            await page.waitForTimeout( 2500 );
 
             // Get all links from the current page
             const links = await page.$$( `table a[href*="/agents/${agent}"]` );
