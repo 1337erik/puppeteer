@@ -345,7 +345,8 @@ const trimOpenPages = async ( browser, main_page ) => {
     let page_count = allPages.length;
     if( page_count < 4 ){
 
-        return await log( `${page_count} Pages Open, 4 Pages Minimum, Skipping..` );
+        await log( `${page_count} Pages Open, 4 Pages Minimum, Skipping..` );
+        return await log( '' );
     }
 
     for( let i = page_count - 2; i > 0; i-- ){
@@ -438,11 +439,9 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
             });
         });
 
-        await closeTab( newTab, current_page, current_link );
+        return await closeTab( newTab, current_page, current_link );
 
     // }, 150 );
-
-    return await log( 'Tab finished..' );
 }
 
 const closeTab = async ( tab, current_page = null, current_link = null ) => {
@@ -476,6 +475,9 @@ const closeTab = async ( tab, current_page = null, current_link = null ) => {
             await log( `Closing Tab..` );
             await tab.close();
         }
+
+        await log( 'Tab finished..' );
+        await log( '' )
 
         timestamp();
         return await log( '------------------------------' );
