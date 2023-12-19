@@ -284,6 +284,7 @@ const sherpaRefresh = async () => {
                     try {
                         // Finding something on the page that implies the page is loaded..
 
+                        await log( 'Scrolling tab..' );
                         // Scroll to the bottom of the page slowly
                         await newTab.evaluate( async () => {
 
@@ -306,6 +307,7 @@ const sherpaRefresh = async () => {
 
                         // Find the index of page2
                         const tabIndex = allPages.findIndex(( page ) => page === newTab );
+                        await log( `Last Tab Index: ${tabIndex}` );
 
                         if( tabIndex !== -1 ){
 
