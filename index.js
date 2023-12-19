@@ -284,7 +284,7 @@ const sherpaRefresh = async () => {
                     try {
                         // Finding something on the page that implies the page is loaded..
 
-                        await log( 'Scrolling tab..' );
+                        await log( 'Scrolling Tab..' );
                         // Scroll to the bottom of the page slowly
                         await newTab.evaluate( async () => {
 
