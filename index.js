@@ -184,6 +184,8 @@ const sherpaRefresh = async () => {
     let current_page = 1; // DONT CHANGE THIS
     let current_link = 0; // DONT CHANGE THIS
 
+    let allPages;
+
     while( true ){
 
         await page.waitForTimeout( 2000 );
@@ -219,7 +221,7 @@ const sherpaRefresh = async () => {
             for( const link of uniqueLinks ){
 
                 // const linkHref = await page.evaluate( link => link.href, link );
-                const newTab = await browser.newPage();
+                let newTab = await browser.newPage();
                 await newTab.goto( link );
 
                 current_link++;
@@ -299,11 +301,28 @@ const sherpaRefresh = async () => {
                             });
                         });
 
-                        await page.waitForTimeout( 3000 );
+                        // Get all open pages
+                        allPages = await browser.pages();
+
+                        // Find the index of page2
+                        const tabIndex = allPages.findIndex(( page ) => page === newTab );
+
+                        if( tabIndex !== -1 ){
+
+                            // Bring the second page into focus (make it the active tab)
+                            await allPages[ tabIndex ].bringToFront();
+
+                        } else {
+
+                            await log( 'Error identifying tab to bring to front, let Erik know' );
+                        }
+
+                        await newTab.waitForTimeout( 3000 );
 
                         // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
                         await newTab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
                         await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
+
                         await newTab.close();
 
                     } catch( e ){
