@@ -161,6 +161,36 @@ const sherpaRefresh = async () => {
         }
     });
 
+    // -- Close First Page --------------------------------------------------
+
+    // Get all open pages
+    let allPages = await browser.pages();
+
+    let selected_tab = null;
+    const page_count = allPages.length;
+    let iteration = 0;
+    while( !selected_tab ){
+
+        if( allPages[ iteration ] != page ){
+
+            selected_tab = allPages[ iteration ];
+
+        } else {
+
+            iteration++;
+        }
+    }
+    await log( `Targeting First Blank Page: ${iteration}..` );
+    await selected_tab.bringToFront();
+
+    const on_main_page = ( selected_tab == page );
+    await log( on_main_page ? 'Main Page detected, not closing..' : 'Closing Tab..' );
+
+    if( !on_main_page ){
+
+        await selected_tab.close();
+    }
+
     // -- Login -------------------------------------------------------------
 
     await login( page );
@@ -223,9 +253,9 @@ const sherpaRefresh = async () => {
                 timestamp();
                 await log( `Processing Link #${current_link}: ${link}..` );
 
-                await processTab( await browser.newPage(), link );
+                await processTab( await browser.newPage(), link, current_page, current_link );
 
-                await closePreviousTab( browser, page, current_page, current_link );
+                // if( current_link > 0 ){ await closePreviousTab( browser, page, current_page, current_link ); }
 
                 current_link++;
             }
@@ -267,7 +297,7 @@ const sherpaRefresh = async () => {
     };
 };
 
-const processTab = async ( newTab, link ) => {
+const processTab = async ( newTab, link, current_page, current_link ) => {
 
     await newTab.goto( link );
 
@@ -328,10 +358,42 @@ const processTab = async ( newTab, link ) => {
             });
         });
 
+        await closeTab( newTab, current_page, current_link );
+
     }, 500 );
 }
 
-const closePreviousTab = async ( browser, page, current_page, current_link ) => {
+const closeTab = async ( tab, current_page, current_link ) => {
+
+    try {
+
+        await log( `Targeting Link #${current_link}..` );
+        await tab.bringToFront();
+
+        await log( 'Closing Tab..' );
+
+        await tab.waitForTimeout( 3000 );
+
+        // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
+        await tab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
+        await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
+        await tab.close();
+
+    } catch( e ){
+
+        await log( `-- Page #${current_page}, Link #${current_link} Failed to Load --` );
+        await log( `ERROR MSG - ${e.message}` );
+        await log( '' );
+        // await newTab.close();
+    }
+
+    timestamp();
+    await log( '------------------------------' );
+
+}
+
+/** @deprecated */
+const closePreviousTab = async ( browser, main_page, current_page, current_link ) => {
 
     // setTimeout( async () => {
         // Close the new tab after waiting, throw into a setTimeout in hopes of running async
@@ -353,35 +415,35 @@ const closePreviousTab = async ( browser, page, current_page, current_link ) => 
             // Get all open pages
             let allPages = await browser.pages();
 
-            // Find the index of page2
-            // const tabIndex = allPages.findIndex(( page ) => page === newTab );
-            const tabIndex = allPages.length - 2;
-            await log( `Targeting Tab Index: ${tabIndex}..` );
+            let selected_tab = null;
+            const page_count = allPages.length;
+            let iteration = 0;
+            while( !selected_tab ){
 
-            if( tabIndex !== -1 ){
+                if( allPages[ iteration ] != main_page ){
 
-                // Bring the second page into focus (make it the active tab)
-                await log( 'Switching tabs...' );
-                const selected_tab = allPages[ tabIndex ];
-                await selected_tab.bringToFront();
+                    selected_tab = allPages[ iteration ];
 
-                const on_main_page = ( selected_tab == page );
-                await log( on_main_page ? 'Main Page detected, not closing..' : 'Closing Tab..' );
+                } else {
 
-                if( !on_main_page ){
-
-                    await selected_tab.waitForTimeout( 3000 );
-
-                    // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
-                    await selected_tab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
-                    await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
-                    await selected_tab.close();
-
+                    iteration++;
                 }
+            }
+            await log( `Targeting Tab Index: ${iteration}..` );
+            await selected_tab.bringToFront();
 
-            } else {
+            const on_main_page = ( selected_tab == main_page );
+            console.log( selected_tab, main_page );
+            await log( on_main_page ? 'Main Page detected, not closing..' : 'Closing Tab..' );
 
-                await log( 'Error Identifying Tab, let Erik know..' );
+            if( !on_main_page ){
+
+                await selected_tab.waitForTimeout( 3000 );
+
+                // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
+                await selected_tab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
+                await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
+                await selected_tab.close();
             }
 
         } catch( e ){
@@ -401,6 +463,7 @@ const closePreviousTab = async ( browser, page, current_page, current_link ) => 
 
 // -- Unused snippets for selecting filters --------------------------------------------------
 
+/** @deprecated */
 const selectArchived = async ( page ) => {
 
     // Wait for the div element with text 'Yes'
@@ -413,6 +476,7 @@ const selectArchived = async ( page ) => {
     await yesDiv[0].click();
 }
 
+/** @deprecated */
 const selectAgency = async ( page ) => {
 
     // Wait for the div element with text 'Yes'
@@ -425,6 +489,7 @@ const selectAgency = async ( page ) => {
     await agencyDiv[0].click();
 }
 
+/** @deprecated */
 const selectShared = async ( page ) => {
 
     // Wait for the div element with text 'Yes'
