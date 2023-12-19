@@ -250,6 +250,8 @@ const sherpaRefresh = async () => {
             // Open each link in a new tab
             for( const link of uniqueLinks ){
 
+                await trimOpenPages( browser, page );
+
                 // const linkHref = await page.evaluate( link => link.href, link );
                 await log( '------------------------------' );
                 timestamp();
@@ -308,6 +310,36 @@ const sherpaRefresh = async () => {
         }
     };
 };
+
+/**
+ * Helper function for some computers to close out extra tabs before proceeding
+ */
+const trimOpenPages = async ( browser, main_page ) => {
+
+    await log( 'Checking to see if page trimming necessary..' );
+
+    // Get all open pages
+    let allPages = await browser.pages();
+
+    let selected_tab = null;
+    const page_count = allPages.length;
+    if( page_count < 4 ){
+
+        await log( 'Less than 4 pages open, skipping..' );
+        return;
+    }
+
+    for( let i = 1; i < allPages.length - 1; i++ ){
+
+        selected_tab = allPages[ i ];
+        if( selected_tab == main_page ){ continue; }
+        await log( `Closing Tab..` );
+        await selected_tab.bringToFront();
+        await selected_tab.waitForTimeout( 1000 );
+        await selected_tab.close();
+    }
+
+}
 
 const processTab = async ( newTab, link, current_page, current_link ) => {
 
