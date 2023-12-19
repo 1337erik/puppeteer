@@ -253,7 +253,17 @@ const sherpaRefresh = async () => {
                 timestamp();
                 await log( `Processing Link #${current_link}: ${link}..` );
 
-                await processTab( await browser.newPage(), link, current_page, current_link );
+                try {
+
+                    await processTab( await browser.newPage(), link, current_page, current_link );
+
+                } catch( e ){
+
+                    await log( `-- Processing Tab Error --` );
+                    await log( `ERROR MSG - ${e.message}` );
+                    await log( '' );
+                    // await newTab.close();
+                }
 
                 // if( current_link > 0 ){ await closePreviousTab( browser, page, current_page, current_link ); }
 
