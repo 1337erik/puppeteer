@@ -310,6 +310,7 @@ const sherpaRefresh = async () => {
                         if( tabIndex !== -1 ){
 
                             // Bring the second page into focus (make it the active tab)
+                            await log( 'Switching tabs...' );
                             await allPages[ tabIndex ].bringToFront();
 
                         } else {
