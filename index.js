@@ -341,7 +341,7 @@ const trimOpenPages = async ( browser, main_page ) => {
         return await log( `${page_count} Pages Open, 4 Pages Minimum, Skipping..` );
     }
 
-    for( let i = page_count - 1; i > 1; i-- ){
+    for( let i = page_count - 2; i > 0; i-- ){
 
         selected_tab = allPages[ i ];
         if( selected_tab == main_page ){ continue; }
