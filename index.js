@@ -350,7 +350,7 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
 
     setTimeout( async () => {
 
-        await log( 'Scrolling Tab..' );
+        await log( `Scrolling Tab ${current_link}..` );
         // Scroll to the bottom of the page slowly
         await newTab.evaluate( async () => {
 
@@ -380,7 +380,7 @@ const closeTab = async ( tab, current_page, current_link ) => {
         await log( `Targeting Link #${current_link}..` );
         await tab.bringToFront();
 
-        await log( 'Closing Tab..' );
+        await log( `Closing Tab ${current_link}..` );
 
         await tab.waitForTimeout( 3000 );
 
