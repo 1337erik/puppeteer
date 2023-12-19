@@ -323,7 +323,7 @@ const trimOpenPages = async ( browser, main_page ) => {
 
     let selected_tab = null;
     const page_count = allPages.length;
-    if( page_count < 4 ){
+    if( page_count <= 4 ){
 
         await log( 'Less than 4 pages open, skipping..' );
         return;
@@ -335,10 +335,14 @@ const trimOpenPages = async ( browser, main_page ) => {
         if( selected_tab == main_page ){ continue; }
         await log( `Closing Tab..` );
         await selected_tab.bringToFront();
-        await selected_tab.waitForTimeout( 1000 );
+        await selected_tab.waitForTimeout( 2000 );
         await selected_tab.close();
+        await selected_tab.waitForTimeout( 2000 );
     }
 
+    await log( 'Finished trimming..' );
+
+    await selected_tab.waitForTimeout( 500 );
 }
 
 const processTab = async ( newTab, link, current_page, current_link ) => {
