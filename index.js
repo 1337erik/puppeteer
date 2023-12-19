@@ -299,6 +299,8 @@ const sherpaRefresh = async () => {
                             });
                         });
 
+                        await page.waitForTimeout( 3000 );
+
                         // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
                         await newTab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
                         await log( `-- Page #${current_page} Link #${current_link} Loaded Successfully --` );
