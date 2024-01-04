@@ -302,13 +302,14 @@ const sherpaRefresh = async () => {
                 current_link++;
             }
 
+            pages_ran++;
+
         } else {
 
             await log( `Skipping Page #${current_page}..` );
         }
 
         current_page++;
-        pages_ran++;
 
         // -- Pagination ------------------------------------------------------------------------------
 
