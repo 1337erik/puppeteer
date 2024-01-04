@@ -229,7 +229,7 @@ const sherpaRefresh = async () => {
 
     await log( number_pages_to_run ? `${number_pages_to_run} pages specified to run..` : 'No page limit specified..' );
 
-    while( number_pages_to_run ? pages_ran <= number_pages_to_run : true ){
+    while( number_pages_to_run ? pages_ran < number_pages_to_run : true ){
 
         await page.waitForTimeout( 1000 );
 
