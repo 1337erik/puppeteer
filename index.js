@@ -223,9 +223,13 @@ const sherpaRefresh = async () => {
 
     const starting_page = process.env.STARTING_PAGE || 1;
     let current_page = 1; // DONT CHANGE THIS
+    let pages_ran = 0; // DONT CHANGE THIS
     let current_link = 0; // DONT CHANGE THIS
+    const number_pages_to_run = process.env.NUMBER_PAGES_TO_RUN || null; // DONT CHANGE THIS
 
-    while( true ){
+    await log( number_pages_to_run ? `${number_pages_to_run} pages specified to run..` : 'No page limit specified..' );
+
+    while( number_pages_to_run ? pages_ran <= number_pages_to_run : true ){
 
         await page.waitForTimeout( 1000 );
 
@@ -304,6 +308,7 @@ const sherpaRefresh = async () => {
         }
 
         current_page++;
+        pages_ran++;
 
         // -- Pagination ------------------------------------------------------------------------------
 
@@ -333,6 +338,8 @@ const sherpaRefresh = async () => {
             break;
         }
     };
+
+    await log( 'Bot reached the end, stopping..' );
 };
 
 /**
