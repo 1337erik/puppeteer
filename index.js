@@ -316,9 +316,9 @@ const sherpaRefresh = async () => {
         try {
             // attempt to paginate..
 
-            const nextButton = await page.waitForSelector( '.pagination-link.last', { timeout: 10000 })
+            const nextButton = await page.waitForSelector( '[aria-label="Go to next page"]', { timeout: 10000 })
 
-            const isDisabled = await page.evaluate( nextButton => nextButton.classList.contains( 'disabled' ), nextButton );
+            const isDisabled = await page.evaluate( nextButton => nextButton.classList.contains( 'Mui-disabled' ), nextButton );
             if( isDisabled ){
                 // if the button also is disabled, we are at the end and can break..
 
@@ -329,7 +329,7 @@ const sherpaRefresh = async () => {
             // else continue to next page..
             await page.evaluate( selector => {
                 document.querySelector( selector ).scrollIntoView({ block: 'center', inline: 'center', behavior: 'auto' });
-            }, '.pagination-link.last' );
+            }, '[aria-label="Go to next page"]' );
 
             await nextButton.click();
 
