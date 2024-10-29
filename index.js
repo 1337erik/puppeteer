@@ -100,6 +100,7 @@ const setFilters = async ( page ) => {
     if( isTruthy( process.env.FILTER_2022 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2022' ); }
     if( isTruthy( process.env.FILTER_2023 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2023' ); }
     if( isTruthy( process.env.FILTER_2024 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2024' ); }
+    if( isTruthy( process.env.FILTER_2025 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2025' ); }
 
     const filter_string = extra_filters.join( '&' );
 
