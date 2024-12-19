@@ -73,34 +73,54 @@ const setFilters = async ( page ) => {
 
     // await log( process.env );
 
-    const base_url = process.env.BASE_URL + process.env.AGENT_TAG + '/clients' + '?_agent_id=' + process.env.AGENT_TAG;
+    const bot_mode = process.env.BOT_MODE;
+
+    const base_url = process.env.BASE_URL + process.env.AGENT_TAG + bot_mode + '?_agent_id=' + process.env.AGENT_TAG;
     let extra_filters = [];
 
-    // extra_filters.push( 'per_page=' + process.env.PAGE_COUNT );
+    if( bot_mode == "/enrollment_leads" ){
+        // -- Filters for Auto Enroll Lead List --------------------------------------------------------------------------------------
 
-    if( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER )){ extra_filters.push( process.env.UNPAID_BINDER_FILTER ); }
-    if( isTruthy( process.env.FILTER_FOR_PAID_BINDER   )){ extra_filters.push( process.env.PAID_BINDER_FILTER   ); }
-    if( isTruthy( process.env.FILTER_FOR_PAID          )){ extra_filters.push( process.env.PAID_FILTER          ); }
-    if( isTruthy( process.env.FILTER_FOR_PAST_DUE      )){ extra_filters.push( process.env.PAST_DUE_FILTER      ); }
-    if( isTruthy( process.env.FILTER_FOR_UNKNOWN       )){ extra_filters.push( process.env.UNKNOWN_FILTER       ); }
-    if( isTruthy( process.env.FILTER_FOR_CANCELLED     )){ extra_filters.push( process.env.CANCEL_FILTER       ); }
-    if( isTruthy( process.env.FILTER_FOR_TERMINATED    )){ extra_filters.push( process.env.TERMED_FILTER       ); }
+        extra_filters.push( 'enrollment_leads[archived]=not_archived' );
+        extra_filters.push( 'enrollment_leads[offEx]=false' );
+        extra_filters.push( 'enrollment_leads[exchange][]=onEx' );
+        extra_filters.push( 'enrollment_leads[sharedBook]=false' );
+        extra_filters.push( '&enrollment_leads[fullBook]=true' );
+        extra_filters.push( 'enrollment_leads[search]=true' );
+        extra_filters.push( 'term=' );
+        extra_filters.push( 'desc[]=lead_updated_at' );
 
-    if( isTruthy( process.env.INCLUDE_ARCHIVED )){ extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.INCLUDE_ARCHIVE_FILTER ); }
-    else { extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.EXCLUDE_ARCHIVE_FILTER ); }
+    } else {
+        // -- Filters for Regular Client List ----------------------------------------------------------------------------------------
 
-    if( !!process.env.FILTER_NAME ){ extra_filters.push( process.env.NAME_FILTER_BASE + process.env.FILTER_NAME ); }
 
-    if( isTruthy( process.env.FILTER_AGENCY ) ){ extra_filters.push( process.env.SCOPE_FILTER_BASE + 'true' ); }
-    else { extra_filters.push( process.env.SCOPE_FILTER_BASE + 'false' ); }
+        // extra_filters.push( 'per_page=' + process.env.PAGE_COUNT );
 
-    if( isTruthy( process.env.FILTER_DESCENDING ) ){ extra_filters.push( 'desc[]=ffm_effective_date' ); }
-    else { extra_filters.push( 'asc[]=ffm_effective_date' ); }
+        if( isTruthy( process.env.FILTER_FOR_UNPAID_BINDER )){ extra_filters.push( process.env.UNPAID_BINDER_FILTER ); }
+        if( isTruthy( process.env.FILTER_FOR_PAID_BINDER   )){ extra_filters.push( process.env.PAID_BINDER_FILTER   ); }
+        if( isTruthy( process.env.FILTER_FOR_PAID          )){ extra_filters.push( process.env.PAID_FILTER          ); }
+        if( isTruthy( process.env.FILTER_FOR_PAST_DUE      )){ extra_filters.push( process.env.PAST_DUE_FILTER      ); }
+        if( isTruthy( process.env.FILTER_FOR_UNKNOWN       )){ extra_filters.push( process.env.UNKNOWN_FILTER       ); }
+        if( isTruthy( process.env.FILTER_FOR_CANCELLED     )){ extra_filters.push( process.env.CANCEL_FILTER       ); }
+        if( isTruthy( process.env.FILTER_FOR_TERMINATED    )){ extra_filters.push( process.env.TERMED_FILTER       ); }
 
-    if( isTruthy( process.env.FILTER_2022 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2022' ); }
-    if( isTruthy( process.env.FILTER_2023 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2023' ); }
-    if( isTruthy( process.env.FILTER_2024 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2024' ); }
-    if( isTruthy( process.env.FILTER_2025 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2025' ); }
+        if( isTruthy( process.env.INCLUDE_ARCHIVED )){ extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.INCLUDE_ARCHIVE_FILTER ); }
+        else { extra_filters.push( process.env.ARCHIVE_FILTER_BASE + process.env.EXCLUDE_ARCHIVE_FILTER ); }
+
+        if( !!process.env.FILTER_NAME ){ extra_filters.push( process.env.NAME_FILTER_BASE + process.env.FILTER_NAME ); }
+
+        if( isTruthy( process.env.FILTER_AGENCY ) ){ extra_filters.push( process.env.SCOPE_FILTER_BASE + 'true' ); }
+        else { extra_filters.push( process.env.SCOPE_FILTER_BASE + 'false' ); }
+
+        if( isTruthy( process.env.FILTER_DESCENDING ) ){ extra_filters.push( 'desc[]=ffm_effective_date' ); }
+        else { extra_filters.push( 'asc[]=ffm_effective_date' ); }
+
+        if( isTruthy( process.env.FILTER_2022 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2022' ); }
+        if( isTruthy( process.env.FILTER_2023 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2023' ); }
+        if( isTruthy( process.env.FILTER_2024 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2024' ); }
+        if( isTruthy( process.env.FILTER_2025 )){ extra_filters.push( process.env.PLAN_YEAR_FILTER + '2025' ); }
+    }
+    // ------------------------------------------------------------------------------------------------------------------------------------
 
     const filter_string = extra_filters.join( '&' );
 
