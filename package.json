@@ -16,9 +16,11 @@
   "dependencies": {
     "chrome-paths": "^1.0.1",
     "dotenv": "^16.0.3",
-    "puppeteer": "^19.4.1",
+    "puppeteer": "npm:rebrowser-puppeteer@^24.0.0",
     "puppeteer-extra": "^3.3.4",
+    "puppeteer-extra-plugin-adblocker": "^2.13.6",
     "puppeteer-extra-plugin-stealth": "^2.11.1",
+    "puppeteer-real-browser": "^1.4.2",
     "random-number": "0.0.9",
     "user-agents": "^1.0.1264"
   }

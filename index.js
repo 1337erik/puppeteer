@@ -1,15 +1,20 @@
-const puppeteer = require( 'puppeteer-extra' );
+// const puppeteer = require( 'puppeteer' );
 const fs = require( 'node:fs/promises' );
 
-const chromePaths = require( 'chrome-paths' );
+const { connect } = require( "puppeteer-real-browser" );
+
+// const chromePaths = require( 'chrome-paths' );
 // const {executablePath} = require( 'puppeteer' );
  
 // https://stackoverflow.com/questions/55678095/bypassing-captchas-with-headless-chrome-using-puppeteer
-const StealthPlugin = require( 'puppeteer-extra-plugin-stealth' );
-puppeteer.use( StealthPlugin() );
+// const StealthPlugin = require( 'puppeteer-extra-plugin-stealth' );
+// puppeteer.use( StealthPlugin() );
+
+// const AdblockerPlugin = require( 'puppeteer-extra-plugin-adblocker' );
+// puppeteer.use( AdblockerPlugin({ blockTrackers: true }));
 
 // https://github.com/intoli/user-agents
-// var userAgent = require('user-agents'); // NOT USED
+// var userAgent = require( 'user-agents' ); // NOT USED
 
 require( 'dotenv' ).config();
 
@@ -64,7 +69,8 @@ const login = async ( page ) => {
     await page.waitForSelector( '#login-submit-button' );
     await log( 'logging in..' );
 
-    await page.waitForTimeout( 2000 );
+    // await page.waitForTimeout( 2000 );
+    new Promise( r => setTimeout( r, 2000 ) );
 
     return await page.click( '#login-submit-button' );
 }
@@ -85,11 +91,14 @@ const setFilters = async ( page ) => {
         extra_filters.push( 'enrollment_leads[offEx]=false' );
         extra_filters.push( 'enrollment_leads[exchange][]=onEx' );
         extra_filters.push( 'enrollment_leads[sharedBook]=false' );
-        extra_filters.push( '&enrollment_leads[fullBook]=true' );
+        extra_filters.push( 'enrollment_leads[fullBook]=true' );
         extra_filters.push( 'enrollment_leads[search]=true' );
         extra_filters.push( 'term=' );
         extra_filters.push( 'desc[]=lead_updated_at' );
+        extra_filters.push( 'enrollment_leads[display_status][]=applying' );
+        extra_filters.push( 'enrollment_leads[display_status][]=confirming' );
 
+        // https://www.healthsherpa.com/agents/tani-blum-_wxdza/enrollment_leads?_agent_id=tani-blum-_wxdza&renewal=all&exchange=onEx&include_shared_applications=true&per_page=50&page=1&enrollment_leads[archived]=not_archived&enrollment_leads[offEx]=false&enrollment_leads[exchange][]=onEx&enrollment_leads[sharedBook]=false&enrollment_leads[fullBook]=true&enrollment_leads[search]=true&term=&desc[]=lead_updated_at&agent_id=tani-blum-_wxdza
     } else {
         // -- Filters for Regular Client List ----------------------------------------------------------------------------------------
 
@@ -140,7 +149,8 @@ const findFfmError = async ( puppet_object ) => {
 
         await log( 'FFM Renew Alert Detected..' );
 
-        const closeButton = await puppet_object.$x( "//div[@style='position: absolute; top: 0px; right: 0px;']//button[contains(@aria-label,'Close') and text()-'X']" );
+        // const closeButton = await puppet_object.$x( "//div[@style='position: absolute; top: 0px; right: 0px;']//button[contains(@aria-label,'Close') and text()-'X']" );
+        const closeButton = await puppet_object.$$( "xpath/.//div[@style='position: absolute; top: 0px; right: 0px;']//button[contains(@aria-label,'Close') and text()-'X']" );
         await closeButton[ 0 ].click();
 
     } catch( e ) {
@@ -156,27 +166,53 @@ const sherpaRefresh = async () => {
 
     await log( '', 'w+' ); // clears file
 
-    const browser = await puppeteer.launch({
-        headless: false,
-        executablePath: chromePaths.chrome,
-        // executablePath: executablePath(),
-        defaultViewport: false
+    const { browser } = await connect({
+
+        headless        : false,
+        // executablePath  : chromePaths.chrome,
+        args            : [],
+        customConfig    : {},
+        turnstile       : true,
+        connectOption   : {
+            defaultViewport : null,
+        },
+        disableXvfb     : false,
+        ignoreAllFlags  : false,
+        // proxy:{
+        //     host:'<proxy-host>',
+        //     port:'<proxy-port>',
+        //     username:'<proxy-username>',
+        //     password:'<proxy-password>'
+        // }
     });
+
+    // await page.goto("<url>");
+
+    // const browser = await puppeteer.launch({
+    //     headless: false,
+    //     executablePath: chromePaths.chrome,
+    //     // ignoreHTTPSErrors: true,
+    //     // executablePath: executablePath(),
+    //     defaultViewport: false
+    // });
     const page = await browser.newPage();
+
+    // console.log( chromePaths );
+    // await page.waitForTimeout( 90000000000 );
 
     // -- THINGS TO AVOID DETECTION --------------------
 
     // page.setUserAgent( userAgent.random().toString() ) // LEMON
 
     // Add Headers 
-    await page.setExtraHTTPHeaders({
+    // await page.setExtraHTTPHeaders({
 
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-        'upgrade-insecure-requests': '1',
-        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'accept-encoding': 'gzip, deflate, br',
-        'accept-language': 'en-US,en;q=0.9,en;q=0.8'
-    }); 
+    //     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+    //     'upgrade-insecure-requests': '1',
+    //     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    //     'accept-encoding': 'gzip, deflate, br',
+    //     'accept-language': 'en-US,en;q=0.9,en;q=0.8'
+    // });
 
     // -- Only load text to make this go faster --------
 
@@ -227,7 +263,8 @@ const sherpaRefresh = async () => {
 
     await login( page );
 
-    await page.waitForTimeout( 3000 );
+    new Promise( r => setTimeout( r, 3000 ) );
+    // await page.waitForTimeout( 3000 );
 
     await findFfmError( page ); // optionally close the "integrate your ffm" modal
 
@@ -240,6 +277,7 @@ const sherpaRefresh = async () => {
 
     // Wait for the table to be present on the page
     await log( 'searching for table..' );
+    // await page.waitForTimeout( 90000000000 );
     await page.waitForSelector( 'table' );
 
     const starting_page = process.env.STARTING_PAGE || 1;
@@ -252,7 +290,8 @@ const sherpaRefresh = async () => {
 
     while( number_pages_to_run ? pages_ran < number_pages_to_run : true ){
 
-        await page.waitForTimeout( 1000 );
+        // await page.waitForTimeout( 1000 );
+        new Promise( r => setTimeout( r, 1000 ) );
 
         if( current_page >= starting_page ){
 
@@ -261,7 +300,8 @@ const sherpaRefresh = async () => {
             await log( `Processing Page #${current_page}..` );
             await log( '' );
 
-            await page.waitForTimeout( 2500 );
+            new Promise( r => setTimeout( r, 2500 ) );
+            // await page.waitForTimeout( 2500 );
 
             // Get all links from the current page
             const links = await page.$$( `table a[href*="/agents/${agent}"]` );
@@ -297,7 +337,8 @@ const sherpaRefresh = async () => {
                     await log( '' );
                 }
 
-                await page.waitForTimeout( 500 );
+                new Promise( r => setTimeout( r, 500 ) );
+                // await page.waitForTimeout( 500 );
 
                 // const linkHref = await page.evaluate( link => link.href, link );
                 await log( '------------------------------' );
@@ -388,7 +429,7 @@ const trimOpenPages = async ( browser, main_page ) => {
         selected_tab = allPages[ i ];
         if( selected_tab == main_page ){ continue; }
 
-        await selected_tab.waitForTimeout( 500 );
+        // await selected_tab.waitForTimeout( 500 );
 
         try {
 
@@ -409,7 +450,7 @@ const trimOpenPages = async ( browser, main_page ) => {
 
     await last_page.bringToFront();
     await log( 'Finished Trimming..' );
-    return await last_page.waitForTimeout( 500 );
+    return true; // await last_page.waitForTimeout( 500 );
 }
 
 const processTab = async ( newTab, link, current_page, current_link ) => {
@@ -426,10 +467,22 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
 
         await log( 'Optional Permission Checkbox Detected..' );
 
-        await newTab.waitForXPath( "//button[contains(text(), 'Continue')]" );
+        try {
 
-        const continueButton = await newTab.$x( "//button[contains(text(), 'Continue')]" );
-        await continueButton[ 0 ].click();
+            // await newTab.waitForXPath( "//button[contains(text(), 'Continue')]" );
+            await newTab.waitForSelector( "xpath/.//button[contains(text(), 'Continue')]" );
+
+            // <button class="_largeRoyal_15l2o_81 _m12_fthss_13297">Continue</button>
+            // /html/body/div[2]/div[4]/div[9]/div/div/div/div/div/div/div[3]/div[2]/div/div[2]/p[2]/button[2]
+            //*[@id="react-container"]/div/div/div/div/div/div/div[3]/div[2]/div/div[2]/p[2]/button[2]
+            const continueButton = await newTab.$$( "xpath/.//button[contains(text(), 'Continue')]" );
+            await log( 'Yes Continue Button Found for Permission Checkbox..' );
+            await continueButton[ 0 ].click();
+
+        } catch( ee ){
+
+            await log( 'No Continue Button Found for Permission Checkbox..' );
+        }
 
     } catch ( e ){
 
@@ -439,14 +492,16 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
     try {
         // The enable-ede step with the yellow-background
 
-        await newTab.waitForXPath( "//button[contains(text(), 'Enable EDE')]", { timeout: 4500 });
+        // await newTab.waitForXPath( "//button[contains(text(), 'Enable EDE')]", { timeout: 4500 });
+        await newTab.waitForSelector( "xpath/.//button[contains(text(), 'Enable EDE')]", { timeout: 4500 });
 
-        const continueButton = await newTab.$x( "//button[contains(text(), 'Enable EDE')]" );
+        // const continueButton = await newTab.$x( "//button[contains(text(), 'Enable EDE')]" );
+        const continueButton = await newTab.$$( "xpath/.//button[contains(text(), 'Enable EDE')]" );
         await continueButton[ 0 ].click();
 
         await log( 'Optional EDE Sync Enable Detected..' );
 
-        await newTab.waitForTimeout( 16000 );
+        // await newTab.waitForTimeout( 16000 );
 
     } catch ( e ){
 
@@ -507,7 +562,7 @@ const closeTab = async ( tab, current_page = null, current_link = null ) => {
 
             await tab.bringToFront();
 
-            await tab.waitForTimeout( 2000 );
+            // await tab.waitForTimeout( 2000 );
             await log( `Closing Tab..` );
             await tab.close();
         }
@@ -586,7 +641,7 @@ const closePreviousTab = async ( browser, main_page, current_page, current_link 
 
             if( !on_main_page ){
 
-                await selected_tab.waitForTimeout( 3000 );
+                // await selected_tab.waitForTimeout( 3000 );
 
                 // await newTab.$x( "//span[contains(text(), 'Application')]", { timeout: 20000 } );
                 await selected_tab.waitForSelector( '#aca-app-coverage-details', { timeout: 20000 });
@@ -609,7 +664,6 @@ const closePreviousTab = async ( browser, main_page, current_page, current_link 
 
     // }, 500 );
 }
-
 
 // -- Unused snippets for selecting filters --------------------------------------------------
 
