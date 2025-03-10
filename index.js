@@ -16,6 +16,12 @@ const { connect } = require( "puppeteer-real-browser" );
 // https://github.com/intoli/user-agents
 // var userAgent = require( 'user-agents' ); // NOT USED
 
+/**
+ * USEFUL DOCS:
+ *  https://github.com/puppeteer/puppeteer/pull/11782 <-- deprecated $x and waitForXPath
+ *  https://scrapeops.io/puppeteer-web-scraping-playbook/nodejs-puppeteer-real-browser/#waiting-for-page-load <-- real-browser guide
+ */
+
 require( 'dotenv' ).config();
 
 const log_file_name = 'recorded-log.txt';
@@ -263,7 +269,7 @@ const sherpaRefresh = async () => {
 
     await login( page );
 
-    new Promise( r => setTimeout( r, 3000 ) );
+    await new Promise( r => setTimeout( r, 3000 ) );
     // await page.waitForTimeout( 3000 );
 
     await findFfmError( page ); // optionally close the "integrate your ffm" modal
@@ -291,7 +297,7 @@ const sherpaRefresh = async () => {
     while( number_pages_to_run ? pages_ran < number_pages_to_run : true ){
 
         // await page.waitForTimeout( 1000 );
-        new Promise( r => setTimeout( r, 1000 ) );
+        await new Promise( r => setTimeout( r, 1000 ) );
 
         if( current_page >= starting_page ){
 
@@ -300,7 +306,7 @@ const sherpaRefresh = async () => {
             await log( `Processing Page #${current_page}..` );
             await log( '' );
 
-            new Promise( r => setTimeout( r, 2500 ) );
+            await new Promise( r => setTimeout( r, 2500 ) );
             // await page.waitForTimeout( 2500 );
 
             // Get all links from the current page
@@ -337,7 +343,7 @@ const sherpaRefresh = async () => {
                     await log( '' );
                 }
 
-                new Promise( r => setTimeout( r, 500 ) );
+                await new Promise( r => setTimeout( r, 500 ) );
                 // await page.waitForTimeout( 500 );
 
                 // const linkHref = await page.evaluate( link => link.href, link );
