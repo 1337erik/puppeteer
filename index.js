@@ -269,7 +269,7 @@ const sherpaRefresh = async () => {
 
     await login( page );
 
-    await new Promise( r => setTimeout( r, 3000 ) );
+    await new Promise( r => setTimeout( r, 6000 ) );
     // await page.waitForTimeout( 3000 );
 
     await findFfmError( page ); // optionally close the "integrate your ffm" modal
