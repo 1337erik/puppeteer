@@ -536,6 +536,8 @@ const processTab = async ( newTab, link, current_page, current_link ) => {
         });
     });
 
+    await new Promise( r => setTimeout( r, 2000 ) );
+
     return await closeTab( newTab, current_page, current_link );
 
     // }, 150 );
